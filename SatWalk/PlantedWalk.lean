@@ -101,11 +101,11 @@ theorem sum_const {f : α → ℝ} (xs : List α) (a : ℝ) (h : ∀ x ∈ xs, f
   | nil => simp
   | cons x xs ih => simp [h _ (.head _), ih (fun y hy => h y (.tail _ hy))]; ring
 
-private theorem unit_move (f : Nat → ℝ) (x : Point n) (i : Fin n) (h : x i = false) :
+theorem unit_move (f : Nat → ℝ) (x : Point n) (i : Fin n) (h : x i = false) :
     avg (pin i) (f (level x)) (fun l => f (level (toggle x l.var))) = f (level x+1) := by
   simp [avg, pin, level_up h]
 
-private theorem triple_move (f : Nat → ℝ) (x : Point n) (t : Triple n) (h : bad t x) :
+theorem triple_move (f : Nat → ℝ) (x : Point n) (t : Triple n) (h : bad t x) :
     avg (clause t) (f (level x)) (fun l => f (level (toggle x l.var))) =
       (f (level x+1) + 2*f (level x-1))/3 := by
   have hs := sum_const t.tails.toList (f (level x-1)) (f := fun i => f (level (toggle x i)))

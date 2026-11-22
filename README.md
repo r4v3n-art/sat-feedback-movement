@@ -34,9 +34,11 @@ The verification script checks the axiom lists, exports the proof terms and invo
 | Theorem 1.2, fixed-instance randomized lower bound for every sufficiently large size | [LowerBound.lean](SatWalk/LowerBound.lean) |
 | Constant-distance-fraction LDPC construction and its signed CNF encoding | [LDPCCode.lean](SatWalk/LDPCCode.lean), [ParityGadget.lean](SatWalk/ParityGadget.lean) |
 | Theorem 1.3, dense and sparse separation under fixed and uniform initialization | [Separation.lean](SatWalk/Separation.lean) |
+| Binomial mistake tail and the optimal mean on simplex codes | [MistakeTail.lean](SatWalk/MistakeTail.lean), [SimplexCalibration.lean](SatWalk/SimplexCalibration.lean) |
+| Exact mean hitting time for triple-first reporting | [PriorityCalibration.lean](SatWalk/PriorityCalibration.lean) |
 | Equivariance of the memoryless kernel and of the history-aware learner | [Memoryless.lean](SatWalk/Memoryless.lean), [SignedLearner.lean](SatWalk/SignedLearner.lean) |
 
-The [oracle model](SatWalk/Model.lean) defines the observable report and legal physical moves. The sparse formal proof constructs a family using permutation layers and uses a finite-horizon hitting-time estimate. Section 4 also gives a proof using sampled triples and stopped excursions. The bit-cost theorem measures the formal machine's bit operations and temporary storage. Runtime and allocation by a particular Lean compiler are outside that model.
+The [oracle model](SatWalk/Model.lean) defines the observable report and legal physical moves. Section 4 constructs the sparse family using permutation layers and obtains the hitting-time bound from a finite-horizon recurrence. The Lean proof follows both steps. The bit-cost theorem measures the formal machine's bit operations and temporary storage. Runtime and allocation by a particular Lean compiler are outside that model.
 
 ## Rebuild the paper
 

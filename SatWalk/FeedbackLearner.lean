@@ -83,11 +83,13 @@ structure Legal (B : Nat) (s t : State n) (c : Clause n) (p : List (Fin n)) : Pr
 
 /-- On any genuine broken-clause report the deterministic update succeeds,
 is a legal physical move, and satisfies the one-round amortized inequality. -/
-theorem advance_spec {B : Nat} (pos : 0 < B) {w : Point n} {s : State n} {c : Clause n}
+theorem advance_charges {B : Nat} (pos : 0 < B) {w : Point n} {s : State n} {c : Clause n}
     (inv : Invariant w s) (promise : parity c w = true) (bad : Broken c s.point) :
     ∃ t p, advance B s c = some (t, p) ∧ Invariant w t ∧ Legal B s t c p ∧
       1 + turns B (gap t.point t.guide) + budget B s.basis.length ≤
-        turns B (gap s.point s.guide) + budget B t.basis.length := by
+        turns B (gap s.point s.guide) + budget B t.basis.length ∧
+      p.length + gap t.point t.guide + Feedback.allowance s.basis.length ≤
+        gap s.point s.guide + Feedback.allowance t.basis.length := by
   obtain ⟨b, path, prep, echelon, guide, wit, odd, growth⟩ := prepare_spec inv promise
   let h := path.foldl toggle s.guide
   obtain ⟨l, found⟩ : ∃ l, c.find? (fun v => holds v h) = some l := by
@@ -112,16 +114,36 @@ theorem advance_spec {B : Nat} (pos : 0 < B) {w : Point n} {s : State n} {c : Cl
   have down := descend pos positive residual
   refine ⟨t, p, by simp [advance, prep, found, h, p, t], ⟨echelon, guide, wit⟩,
           ⟨nd, by rw [show p.length = _ from len]; exact Nat.min_le_left .., ⟨l, mem, hit⟩, rfl⟩, ?_⟩
-  change 1 + turns B (gap (p.foldl toggle s.point) h) + _ ≤ _ + budget B b.length
-  change turns B (gap (p.foldl toggle s.point) h) + 1 ≤ turns B (gap s.point h) at down
-  rcases growth with ⟨rfl, rfl⟩ | ⟨rank, cost⟩
-  · change turns B (gap (p.foldl toggle s.point) h) + 1 ≤ turns B (gap s.point s.guide) at down
-    omega
-  · have distance : gap s.point h ≤ gap s.point s.guide + (s.basis.length+1) :=
-      Nat.le_trans (guide_change s.point s.guide path) (Nat.add_le_add_left (rank ▸ cost) _)
-    have up := climb pos distance
-    rw [rank, budget]
-    omega
+  constructor
+  · change 1 + turns B (gap (p.foldl toggle s.point) h) + _ ≤ _ + budget B b.length
+    change turns B (gap (p.foldl toggle s.point) h) + 1 ≤ turns B (gap s.point h) at down
+    rcases growth with ⟨rfl, rfl⟩ | ⟨rank, cost⟩
+    · change turns B (gap (p.foldl toggle s.point) h) + 1 ≤ turns B (gap s.point s.guide) at down
+      omega
+    · have distance : gap s.point h ≤ gap s.point s.guide + (s.basis.length+1) :=
+        Nat.le_trans (guide_change s.point s.guide path) (Nat.add_le_add_left (rank ▸ cost) _)
+      have up := climb pos distance
+      rw [rank, budget]
+      omega
+  · change p.length + gap (p.foldl toggle s.point) h + Feedback.allowance s.basis.length ≤
+      gap s.point s.guide + Feedback.allowance b.length
+    have walk : p.length + gap (p.foldl toggle s.point) h ≤ gap s.point h := by
+      change p.length = min B (gap s.point h) at len
+      change gap (p.foldl toggle s.point) h ≤ gap s.point h-B at residual
+      omega
+    rcases growth with ⟨rfl,rfl⟩ | ⟨rank,cost⟩
+    · exact Nat.add_le_add_right walk _
+    · have dist := guide_change s.point s.guide path
+      change gap s.point h ≤ _ at dist
+      rw [rank,Feedback.allowance]; omega
+
+theorem advance_spec {B : Nat} (pos : 0 < B) {w : Point n} {s : State n} {c : Clause n}
+    (inv : Invariant w s) (promise : parity c w = true) (bad : Broken c s.point) :
+    ∃ t p, advance B s c = some (t, p) ∧ Invariant w t ∧ Legal B s t c p ∧
+      1 + turns B (gap t.point t.guide) + budget B s.basis.length ≤
+        turns B (gap s.point s.guide) + budget B t.basis.length := by
+  obtain ⟨t,p,a,i,l,steps,_⟩ := advance_charges pos inv promise bad
+  exact ⟨t,p,a,i,l,steps⟩
 
 /-- Any legal adaptive reporting history, starting from the given assignment. -/
 inductive Run (B : Nat) (cs : List (Clause n)) (x : Point n) : Nat → State n → Prop where

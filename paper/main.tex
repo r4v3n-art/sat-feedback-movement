@@ -51,7 +51,7 @@ Local search solvers for SAT modify a current assignment in response to violated
 In general 3-SAT, the difficulty of computing a consistent assignment gets tangled up with the cost of walking to it. The odd-parity promise separates those two problems cleanly. Each clause yields a linear equation over $\F_2$ that the promised witness satisfies. Maintaining a candidate consistent with past feedback therefore takes polynomial time. That leaves the movement cost exposed, letting us pin down how many steps a solver needs to act on what it learns.
 
 \paragraph{The Hidden-Formula Odd-Parity Model.}
-Fix a hidden CNF formula $\Phi$ on $N$ Boolean variables with clauses of width at most $3$. The searcher knows $N$ and is given the following promise: there exists a witness assignment $x^* \in \{0,1\}^N$ making an \emph{odd number of literals true in every clause} of $\Phi$. Thus, a $3$-literal clause may have either $1$ or $3$ true literals under $x^*$.
+Fix a hidden CNF formula $\Phi$ on $N$ Boolean variables with clauses of width at most $3$. Width counts literal positions, including any repeated occurrences. The searcher knows $N$ and is given the following promise: there exists a witness assignment $x^* \in \{0,1\}^N$ making an \emph{odd number of literals true in every clause} of $\Phi$. Thus, a $3$-literal clause may have either $1$ or $3$ true literals under $x^*$.
 
 Search begins at an arbitrary assignment $x^{(0)} \in \{0,1\}^N$. At each round:
 \begin{enumerate}
@@ -185,21 +185,20 @@ There exists an absolute constant $\delta > 0$ such that for all sufficiently la
 \end{lemma}
 
 \begin{proof}
-Pair $3b$ variable sockets uniformly at random with $6m = 3b$ check sockets (counting parallel incidences modulo $2$). Any nonzero codeword of weight $s$ has $3s$ incident sockets; because every touched check must receive an even number of incidences, it touches at most $t = \lfloor 3s/2 \rfloor$ checks. For $s \le \delta b$ with $\delta \le 1/3$, we have $t \le m$. Sampling without replacement only lowers the probability that all $3s$ sockets fall into a fixed set of $t$ checks, so by a union bound the probability of a weight-$s$ codeword is at most
+Put $b=2m$ and choose a uniform bijection between the $3b$ variable sockets and $6m$ check sockets. In a codeword each touched check receives an even number of selected sockets. The weight of a nonzero codeword is therefore even, say $2j$, and its $6j$ sockets touch at most $3j$ checks. For $1\le j\le m/26244$ extend the touched set to exactly $3j$ checks. Given a set of $2j$ variables and a set of $3j$ checks, the probability that the former sends all its sockets into the latter is at most $(3j/m)^{6j}$ by sampling without replacement. A union bound and $\binom{v}{h}\le(3v/h)^h$ for $h\ge 1$ give
 \[
-    \binom{b}{s}\binom{m}{t}\left(\frac{t}{m}\right)^{3s}
-    \le \left(\frac{eb}{s}\right)^s \left(\frac{em}{t}\right)^t \left(\frac{t}{m}\right)^{3s}
-    \le \left(e^{5/2} 3^{3/2} \sqrt{\frac{s}{b}}\right)^s,
+  \binom{2m}{2j}\binom{m}{3j}(3j/m)^{6j}
+       \le (6561j/m)^j \le 4^{-j}.
 \]
-using $e^t \le e^{3s/2}$, $t/m \le 3s/b \le 1$, and $3s - t \ge 3s/2$. Choosing $\delta > 0$ small enough that $e^{5/2} 3^{3/2} \sqrt{\delta} \le 1/4$ makes the sum over $1 \le s \le \delta b$ at most $1/3 < 1$. Hence a suitable code exists.
+Since $\sum_{j\ge1}4^{-j}=1/3$, some pairing has no nonzero codeword of weight at most $2\lfloor m/26244\rfloor$. There are at most $m$ independent parity rows, so the dimension is at least $m$. Each row has six sockets and each column has three. Cancelling repeated entries modulo two gives the asserted weight bounds.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:lower}]
-Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. Cancel repeated variables modulo $2$ within each check so each check has even arity in $\{0,2,4,6\}$. Implement each $6$-input even check $a \xor b \xor c \xor d \xor e \xor f = 0$ using three auxiliary prefix variables $u,v,w$ and four ternary even-parity equations:
+Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. In each row let $a,b',c,d,e,f$ be the variables at the six sockets, allowing repetitions. Three fresh coordinates $u,v,w$ implement the even check through the four equations
 \[
-    a \xor b \xor u = 0,\quad u \xor c \xor v = 0,\quad v \xor d \xor w = 0,\quad w \xor e \xor f = 0.
+    a \xor b' \xor u = 0,\quad u \xor c \xor v = 0,\quad v \xor d \xor w = 0,\quad w \xor e \xor f = 0.
 \]
-(Arity-$4$ checks use two ternary gates; arity-$2$ checks use two binary clauses; empty checks are omitted.) Encode each ternary even-parity equation by the four ordinary width-$3$ CNF clauses forbidding the four odd-weight tuples. On any even-weight tuple, the number of true literals in each clause equals its Hamming distance from that forbidden odd tuple, which is always odd ($1$ or $3$).
+Encode each ternary even-parity equation by the four ordinary width-$3$ CNF clauses forbidding the four odd-weight tuples. On any even-weight tuple, the number of true literals in each clause equals its Hamming distance from that forbidden odd tuple, which is always odd ($1$ or $3$).
 
 Each original codeword extends uniquely to the auxiliary variables, and the extended code has minimum distance at least $d \ge \delta b$. The total number of variables is $N \le b + 3b/2 = 5b/2$, so $k, d = \Omega(N)$. The formula has $O(N)$ clauses; each original variable occurs at most $13$ times (including its unit pin), and each auxiliary variable occurs at most $8$ times. Unit pins have $1$ (odd) true literal at the secret codeword. Applying Lemma~\ref{lem:charge} yields expected cost $\Omega(k \lceil d/B \rceil) = \Omega(N + N^2/B)$.
 \end{proof}
@@ -221,13 +220,12 @@ Let $j \in \{1,\dots,N-1\}$ be the number of correct bits. There are $N-j$ viola
 \[
     p_j = \frac{1 + c_j/3}{1 + c_j}, \qquad q_j = 1 - p_j,
 \]
-with reflection upward at $j=1$. Writing $E_j$ for the expected remaining flips from state $j$ and $\Delta_j = E_j - E_{j+1}$, first-step conditioning gives $\Delta_1 = 1$ and $\Delta_j = 1/p_j + (q_j/p_j)\Delta_{j-1}$. Since $1/p_j \le 3$ and $q_j/p_j \le 2$, we have $\Delta_j \le 2^{j+1}-3$. In the other direction, for $j \ge 2$,
+with reflection upward at $j=1$. Writing $E_j$ for the expected remaining flips from state $j$ and $\Delta_j = E_j - E_{j+1}$, first-step conditioning gives $\Delta_1 = 1$ and $\Delta_j = 1/p_j + (q_j/p_j)\Delta_{j-1}$. Since $1/p_j \le 3$ and $q_j/p_j \le 2$, we have $\Delta_j \le 2^{j+1}-3$. For $j\ge7$ we have $2^j j\le896\Delta_j(j-6)$. At $j=7$ this follows from $\Delta_7\ge1$. For the induction step use
 \[
-    \Delta_j \ge \prod_{t=2}^j \frac{2}{1 + 3/c_t}
-    \ge 2^{j-1} \exp\!\left(-\sum_{t=2}^j \frac{6}{t(t-1)}\right)
-    \ge e^{-6} 2^{j-1},
+ \Delta_{j+1}\ge\frac{2c_{j+1}}{3+c_{j+1}}\Delta_j,\qquad
+ (j+1)(3+c_{j+1})(j-6)\le j\,c_{j+1}(j-5).
 \]
-using $\ln(1+u) \le u$ and telescoping. Summing the differences gives $E_1=\Theta(2^N)$. For $1\le j<N$, $\Delta_{N-1}\le E_j\le E_1$. A uniform start lies in this interval with probability $1-2^{1-N}$. The endpoint costs are $E_N=0$ and $E_0=1+E_1$, giving the same two-sided order after averaging. (Under a fixed priority order that always prefers a violated triple over a unit, $p_j = 1/3$ for $j \ge 2$ and $E_1 = 2^{N+1} - 3N - 1$ exactly for $N \ge 2$.)
+The second inequality follows by substituting $2c_{j+1}=j(j+1)$. Thus $\Delta_j\ge2^j/896$ for $j\ge7$. Summing the differences gives $E_1=\Theta(2^N)$. For $1\le j<N$, $\Delta_{N-1}\le E_j\le E_1$. A uniform start lies in this interval with probability $1-2^{1-N}$. The endpoint costs are $E_N=0$ and $E_0=1+E_1$, giving the same two-sided order after averaging. (Under a fixed priority order that always prefers a violated triple over a unit, $p_j = 1/3$ for $j \ge 2$ and $E_1 = 2^{N+1} - 3N - 1$ exactly for $N \ge 2$.)
 
 \begin{proposition}[Equivariance Forces Uniformity]\label{prop:equiv}
 Let a memoryless single-flip policy be a probability kernel depending only on the current assignment $x$ and the reported violated clause $C$ (as an unordered set of literals). If the policy is equivariant under variable renaming and independent bit complementation, then it must choose a variable uniformly at random from $C$.
@@ -241,20 +239,32 @@ For an equivariant learner, choose one uniform random permutation of the coordin
 
 \subsection{Sparse Bounded-Occurrence Strengthening}
 
-Adapting planted-formula random-walk drift bounds \cite{alekhnovich2002}, we reduce the clause count to $O_\varepsilon(N)$ with bounded variable degree.
+We choose a sparse subfamily of the dense triples by counting collections of permutations. This bounds the number of occurrences of every variable and supplies the drift estimate at every assignment in a middle band.
 
-\begin{proof}[Proof of Sparse Bound in Theorem~\ref{thm:sep}]
-Fix $0 < \varepsilon < 1$. Choose a small constant $\alpha > 0$ and a large constant $L$ such that $\rho = 2L/(L+3) > 1$ and $\rho^{1-2\alpha} > 2 - \varepsilon$. Keep all $N$ unit pins $(x_i)$ and draw $M = DN$ independent uniform triples of the form $(x_i \lor \neg x_j \lor \neg x_k)$ with distinct variables.
-
-For any assignment with $j$ correct bits in the band $\alpha N \le j \le (1-\alpha)N$, a single draw is violated with probability
+\begin{proof}[Proof of the sparse bound in Theorem~\ref{thm:sep}]
+Fix $0<\varepsilon<1$, put $t=2-\varepsilon$ and $\rho=2-\varepsilon/2$, and choose an integer $L>3\rho/(2-\rho)$. Since $t/\rho<1$, there is an integer $A\ge4$ with $t^A\le\rho^{A-2}$. Set
 \[
-    \frac{N-j}{N} \cdot \frac{j(j-1)}{(N-1)(N-2)} \ge \eta := \frac{\alpha^3}{2}
+ K=2A(2L+3),\qquad r=\lceil N/K\rceil,\qquad a=(2L+3)r,\qquad b=N-a.
 \]
-for sufficiently large $N$. By a Chernoff bound and a union bound over all $\le 2^N$ band assignments, the probability that any band state has fewer than $\eta M / 2$ violated triples is at most $2^N \exp(-\eta M/8)$, which tends to $0$ for $D$ large enough that also $\eta D / 4 \ge L$.
+For $N\ge K$, the inequality $Kr\le N+K-1$ gives $Aa\le N$. Hence $4a\le N$ and $t^N\le\rho^{b-a}$, by writing $N=Aa+(N-Aa)$.
 
-To bound variable degrees and remove duplicates, let $X_i$ be the occurrence count of variable $i$ before pruning; $\E[X_i] = 3D$ and $\E[X_i^2] \le 9D^2 + 3D$. Deleting all triples touching any variable of degree $> K$ and discarding duplicates removes in expectation at most $N(9D^2+3D)/K + O(D^2/N)$ triples. For a sufficiently large constant $K$, Markov's inequality ensures positive probability of deleting at most $\eta M / 4$ triples simultaneously with the uniform band guarantee. Fix such a formula. Every variable occurs at most $K+1$ times, and every band state has $T \ge \eta M/4 \ge LN$ violated triples and $U = N-j$ violated units.
+Choose an integer $s$ with $(1-1/K)^s<1/8$ and draw $D=Ks$ independent uniform permutations of the $N$ variables. Use the directed edges $i\to\pi(i)$ from all $D$ permutations. For given $r$-sets $X,Y$, one permutation sends no element of $X$ into $Y$ with probability at most $(1-r/N)^r\le(1-1/K)^r$. Since $rK\ge N$, the probability that all $D$ miss is at most $8^{-N}$. There are at most $4^N$ ordered pairs of sets. Thus some choice gives an edge from $X$ to $Y$ for every such pair.
 
-Inside the band, the conditional down/up ratio is $2T/(3U+T) \ge 2L/(L+3) = \rho$, even though $j$ is no longer Markov. Set $a = \lceil \alpha N \rceil$ and $b = \lfloor (1-\alpha)N \rfloor$. During any excursion starting at $a+1$ until hitting $a$ or $b$, the process $\rho^j$ is a bounded supermartingale: $\E[\rho^{j_{\mathrm{next}} - j} \mid \mathcal{F}_t] \le 1$. Optional stopping bounds the probability of crossing from $a+1$ to $b$ before returning to $a$ by $(\rho-1)/(\rho^{b-a}-1)$, uniformly over histories. Every successful trajectory from $j=1$ must complete such a crossing. Write $p=(\rho-1)/(\rho^{b-a}-1)$. From $j\le a$ the probability of success by time $t$ is at most $tp$, since at most $t$ excursions begin by then. Taking $t=\lfloor 1/(2p)\rfloor$ gives mean time $\Omega(1/p)$. For a uniform start $\Prb(j\le N/2)\ge 1/2$. If $a<j\le N/2$, the same stopped-process argument bounds the chance of hitting $b$ before $a$ by $(\rho^{j-a}-1)/(\rho^{b-a}-1)=o(1)$ uniformly. The band is exited almost surely, since the conditional chance of exiting in the next $N$ moves by successive upward steps is at least $3^{-N}$. Thus with probability bounded below the process must cross from $a$, giving mean time $\Omega(\rho^{b-a})=\Omega((2-\varepsilon)^N)$ also under uniform initialization.
+Keep the $N$ unit pins. For each owner $i$ include $(x_i\lor\neg x_j\lor\neg x_k)$ for each unordered pair of distinct out-neighbors $j,k$ different from $i$. There are at most $(1+2^D)N$ clauses. A variable can occur in triples owned by itself or by one of its at most $D$ predecessors, so its total occurrence count is at most $1+3(D+1)2^D$.
+
+Let $S$ be the set of true variables and suppose $a<j=|S|<b$. Fewer than $r$ owners have fewer than $2L+2$ distinct neighbors in $S$. Otherwise the neighbors of $r$ such owners would leave an untouched $r$-subset of $S$, since $|S|\ge(2L+3)r$. Among the $U=N-j\ge2r$ false owners, at least $U/2$ therefore have at least $2L+2$ true neighbors. Each contributes at least $2L$ violated triples. Writing $T$ for their total, we obtain $T\ge LU$. Under the uniform-clause walk the down/up probability ratio is $2T/(3U+T)\ge\rho$ at every assignment in this band.
+
+For the hitting-time estimate, write $z(j)=\max(0,\min(j,b)-a)$ and
+\[
+ V(j)=\frac{\rho^{b-a}-\rho^{z(j)}}{\rho-1}.
+\]
+Inside the band an upward move decreases $V$ by $\rho^{j-a}$ and a downward move increases it by $\rho^{j-1-a}$. The ratio bound gives nonnegative expected change there. At or below $a$ one move can lose at most one unit, and at or above $b$ the potential is zero. Thus $V(j)\le1+\E[V(j_{\rm next})\mid x]$ at every unsolved assignment $x$ of level $j$. This bound conditions on the whole assignment.
+
+Let $H_h(x)$ be the expected number of moves up to success or the horizon $h$, whichever comes first. Choose $M>\max(1,\max_j V(j))$. Induction on $h$ in the one-step recurrence gives
+\[
+ H_h(x)\ge[1-(1-1/M)^h]V(j).
+\]
+Indeed, if the current coefficient is $c$, then $1+c\,\E V(j_{\rm next})\ge cV(j)+1-c\ge[c+(1-c)/M]V(j)$. At success both sides vanish. For large $h$ the coefficient exceeds $1/2$. For $j<b$, we have $V(j)\ge\rho^{b-a-1}\ge\rho^{b-a}/2$, so the mean hitting time is at least $t^N/4$. This covers the specified start with one true bit. Under uniform initialization $\Prb(j\le N/2)\ge1/2$ by complementation, and $N/2<b$. Averaging gives the lower bound $t^N/8$.
 \end{proof}
 
 \section{Formal Verification, Empirical Checks, and Related Work}\label{sec:verif}
@@ -266,16 +276,16 @@ Lean~4.36.0 and the matching Mathlib release verify the three main results again
 \item \texttt{theorem\_lower\_bound} combines finite socket counting, parity-to-CNF compilation, and the first-examination charge. For any almost-surely terminating solver with measurable cost, one fixed promised formula has the required expected cost over its random tape.
 \item \texttt{theorem\_memoryless\_separation} gives dense and bounded-occurrence families for every signed-equivariant memoryless policy, under both initializations. The learner's guarantee holds on every history of those same formulas. A companion theorem couples whole learner histories under signed renaming.
 \end{itemize}
-The formal sparse proof uses bounded-degree permutation layers to supply enough violated triples throughout the middle band. It bounds the expected hitting time by comparing a potential with the finite-horizon recurrence for the walk. Section~\ref{sec:sep} gives a second proof using sampled triples and stopped excursions. The audit script rebuilds the declarations, checks their axiom lists and exports their proof terms for kernel replay. The only axioms used are propositional extensionality, classical choice and quotient soundness. The public \href{https://github.com/r4v3n-art/sat-feedback-movement}{companion repository} contains the paper, proofs and reproduction commands.
+The audit script rebuilds the declarations, checks their axiom lists and exports their proof terms for kernel replay. The only axioms used are propositional extensionality, classical choice and quotient soundness. The public \href{https://github.com/r4v3n-art/sat-feedback-movement}{companion repository} contains the paper, proofs and reproduction commands.
 
 \paragraph{Calibration.}
-The finite checks in \texttt{check\_feedback.py} enumerate small cube instances, count dense transitions, and exercise the $[7,3,4]$ simplex example from Remark~\ref{rem:simplex}.
+Lean proves the binomial tail bound for every cutoff in Lemma~\ref{lem:charge}, the exact simplex optimum in Remark~\ref{rem:simplex} for every dimension and batch size, and the exact mean of the triple-first walk. The finite checks in \texttt{check\_feedback.py} enumerate small cube instances, count dense transitions, and exercise the $[7,3,4]$ simplex example from Remark~\ref{rem:simplex}.
 
 \paragraph{Related Work.}
 Gaussian elimination for affine promise CSPs \cite{brakensiek2018}, hidden-CSP trial-and-error oracle models \cite{bei2012}, exponential lower bounds for WalkSAT on planted distributions \cite{alekhnovich2002}, accelerating local search via learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2023} give related algorithms and models. Gao, He and Jiang \cite{gao2026} also obtain bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates in the number $m$ of clauses. The specific contribution here is the rank-sensitive movement bound and matching LDPC lower bound $\Theta(N + N^2/B)$ across batch sizes $B$ in the odd-parity hidden-clause oracle model, together with the equivariant memoryless separation.
 
 \paragraph{Open Problems.}
-Can the bounded-occurrence family in Theorem~\ref{thm:sep} be constructed deterministically in time polynomial in $N$ for each fixed $\varepsilon$? Our two proofs choose from random triples or permutation layers. Can sparse row representations improve the verified quartic bit-work bound while preserving the rank-sensitive movement guarantee? Finally, what movement bounds hold for hidden Horn or 2-SAT formulas, or when a small fraction of clauses violate the odd-parity promise?
+Can the bounded-occurrence family in Theorem~\ref{thm:sep} be constructed deterministically in time polynomial in $N$ for each fixed $\varepsilon$? Our existence proof chooses permutation layers by counting. Can sparse row representations improve the verified quartic bit-work bound while preserving the rank-sensitive movement guarantee? Finally, what movement bounds hold for hidden Horn or 2-SAT formulas, or when a small fraction of clauses violate the odd-parity promise?
 
 \begin{thebibliography}{9}
 

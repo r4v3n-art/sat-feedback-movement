@@ -51,16 +51,14 @@ private theorem maximum_leaf (f : Formula n → ℝ≥0∞) (D : Formula n) (cs)
     · refine ⟨L, List.mem_append_left _ hl, ?_⟩
       simpa [leafSum, pow_succ, mul_two, mul_add] using add_le_add lb (rb.trans (mul_le_mul_left le _))
 
-/-- For an arbitrary probability law on a secret-independent solver tape,
-some fixed pin string costs at least k ceil(d/B)/2 in expectation. Hitting
-times on null sets may be completed arbitrarily. -/
-theorem randomized_code_charge [IsProbabilityMeasure μ] {B d : Nat} (pos : 0 < B)
+/-- Unnormalized uniform-secret mean, integrating over any independent solver tape. -/
+theorem uniform_expected_charge [IsProbabilityMeasure μ] {B d : Nat} (pos : 0 < B)
     (alg : Ω → Solver n σ) (x : Point n) (D : Formula n) (dist : Separated D d)
     (cs : List (Fin n))
     (fin : ∀ G ∈ instances D cs, ∀ᵐ ω ∂μ, ∃ t, Hit B (alg ω) G x t)
     (meas : ∀ G ∈ instances D cs, AEMeasurable (fun ω => (first B (alg ω) G x : ℝ≥0∞)) μ) :
-    ∃ G ∈ instances D cs, (cs.length * turns B d : Nat) ≤
-      2 * (∫⁻ ω, (first B (alg ω) G x : ℝ≥0∞) ∂μ) := by
+    (cs.length * turns B d : Nat) * (2 : ℝ≥0∞)^cs.length ≤
+      2 * leafSum (fun G => ∫⁻ ω, (first B (alg ω) G x : ℝ≥0∞) ∂μ) D cs := by
   let f := fun G ω => (first B (alg ω) G x : ℝ≥0∞)
   let c : ℝ≥0∞ := (cs.length * turns B d : Nat)
   let w : ℝ≥0∞ := 2^cs.length
@@ -79,6 +77,22 @@ theorem randomized_code_charge [IsProbabilityMeasure μ] {B d : Nat} (pos : 0 < 
   have integ := leaf_integral f D cs meas
   have avg := lintegral_mono_ae bound
   rw [lintegral_const, measure_univ, mul_one, lintegral_const_mul'' _ integ.1, integ.2] at avg
+  exact avg
+
+/-- For an arbitrary probability law on a secret-independent solver tape,
+some fixed pin string costs at least k ceil(d/B)/2 in expectation. Hitting
+times on null sets may be completed arbitrarily. -/
+theorem randomized_code_charge [IsProbabilityMeasure μ] {B d : Nat} (pos : 0 < B)
+    (alg : Ω → Solver n σ) (x : Point n) (D : Formula n) (dist : Separated D d)
+    (cs : List (Fin n))
+    (fin : ∀ G ∈ instances D cs, ∀ᵐ ω ∂μ, ∃ t, Hit B (alg ω) G x t)
+    (meas : ∀ G ∈ instances D cs, AEMeasurable (fun ω => (first B (alg ω) G x : ℝ≥0∞)) μ) :
+    ∃ G ∈ instances D cs, (cs.length * turns B d : Nat) ≤
+      2 * (∫⁻ ω, (first B (alg ω) G x : ℝ≥0∞) ∂μ) := by
+  let f := fun G ω => (first B (alg ω) G x : ℝ≥0∞)
+  let c : ℝ≥0∞ := (cs.length * turns B d : Nat)
+  let w : ℝ≥0∞ := 2^cs.length
+  have avg := uniform_expected_charge pos alg x D dist cs fin meas
   obtain ⟨G, mem, mx⟩ := maximum_leaf (fun G => ∫⁻ ω, f G ω ∂μ) D cs
   refine ⟨G, mem, ?_⟩
   have scaled := avg.trans (mul_le_mul_right mx 2)
