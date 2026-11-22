@@ -1,0 +1,6 @@
+.lake/
+*.aux
+*.log
+*.out
+__pycache__/
+.DS_Store

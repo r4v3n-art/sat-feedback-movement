@@ -1,0 +1,26 @@
+name: Lean artifact
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      MATHLIB_NO_CACHE_ON_UPDATE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: "false"
+          build: "false"
+          use-mathlib-cache: "false"
+          use-github-cache: "false"
+      - name: Fetch the pinned Mathlib modules
+        run: |
+          modules=$(sed -n 's/^import \(Mathlib\.[A-Za-z0-9_.]*\)$/\1/p' SatWalk/*.lean | sort -u)
+          lake exe cache get $modules
+      - name: Check Lean proofs and axiom lists
+        run: ./scripts/verify.sh --axioms-only
+      - name: Run the finite calibration examples
+        run: python3 scripts/check_feedback.py
