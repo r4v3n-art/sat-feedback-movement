@@ -2,9 +2,28 @@
 
 C.J. Bordeleau · Independent Researcher · November 2026
 
-A hidden CNF has a witness with an odd number of true literals in every clause. Each failed query reveals one violated clause. If a move can flip at most `B` variables and must touch that clause, the minimax movement cost on `N` variables is Θ(N + N²/B). The paper also compares the parity learner with memoryless search under the same uniform-clause feedback.
+How many times do you have to revise a plan when each rejection reveals just one broken rule? This paper answers that question for a class of Boolean constraints where you can change only a few decisions at a time.
 
 [Read the paper (PDF)](paper/main.pdf) · [LaTeX source](paper/main.tex) · [Lean theorem statements and axiom audit](SatWalk/Main.lean)
+
+## A party with hidden seating rules
+
+You’re seating guests at two long tables, one in the garden and one in the hall, with plenty of room at both. The host knows all the family drama. You hand over a seating chart, and the host either approves it or tells you one rule you broke. Before asking again, you can move up to `B` guests to the other table. At least one must be named in the complaint.
+
+Suppose the host tells you these two rules over the course of the evening.
+
+- “At least one of Alex, Cam, or Jo needs to be in the garden to keep the cousins civil.”
+- “At least one of Alex, Cam, or Sam needs to be in the garden to keep the speeches short.”
+
+Each seating rule corresponds to a SAT clause with up to three conditions about who sits where. The paper makes one special promise. There is a chart where an **odd** number of the conditions in every rule hold. For each rule above, that means one or three of its guests are in the garden. Now notice who appears twice. Alex and Cam contribute the same count to both rules, so **Jo and Sam must be at the same table in that promised chart**. You’ve learned something about two guests the host never mentioned together. The solver keeps deductions like this and uses them to guide later moves. The host approves any chart that satisfies all the rules.
+
+## Why this matters
+
+Think of a test rig where each run reports one failed check and you can change only a few settings before the next run. If your next candidate differs in five settings and the rig accepts two changes per run, it takes at least three runs just to reach it. Along the way another failure might change which candidate you want to try. The bound accounts for both discovering the rules and acting on what you learn.
+
+With `N` guests and a limit of `B` guests per revision, the best possible worst-case number of revisions grows as **Θ(N + N²/B)**. Moving one guest at a time can take quadratically many revisions. Even if you can reseat everyone at once, some parties still need linearly many revisions to reveal enough information. The lower bound holds even for randomized solvers when cost is measured in expectation.
+
+Memory matters even with the same feedback. On one family of seating problems, the host picks a broken rule uniformly at random each time. Moving a randomly chosen guest from that complaint takes exponentially many moves on average. A solver that remembers the rules and learns from them finishes within `N(N + 1)/2` single-guest moves on every run.
 
 ## Build and verify
 
