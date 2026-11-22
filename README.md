@@ -2,6 +2,10 @@
 
 C.J. Bordeleau · Independent Researcher · November 2026
 
+![Schematic of a cube of assignments. A crimson path doubles back on the left. On the right, cyan planes intersect and a stepped path approaches a gold vertex.](docs/figures/feedback-guided-search.jpg)
+
+The crimson walker uses only the latest report of a broken rule. The cyan learner remembers earlier reports and uses their parity equations to guide its next move. [How to read the diagram](#two-searches-on-the-same-cube)
+
 How many times do you have to revise a plan when each rejection reveals just one broken rule? This paper answers that question for a class of Boolean constraints where you can change only a few decisions at a time.
 
 [Read the paper (PDF)](paper/main.pdf) · [LaTeX source](paper/main.tex) · [Lean theorem statements and axiom audit](SatWalk/Main.lean)
@@ -34,8 +38,6 @@ Together these bounds give **Θ(N + N²/B)**. Up to constant factors, this is bo
 Think of a test rig where each run reports one failed check and you can change only a few settings before the next run. If your next candidate differs in five settings and the rig accepts two changes per run, it takes at least three runs just to reach it. Along the way another failure might change which candidate you want to try. The seating model puts a number on the combined cost of discovering the rules and acting on what you learn.
 
 ### Two searches on the same cube
-
-![Schematic of a cube of assignments. A crimson path doubles back on the left. On the right, cyan planes intersect and a stepped path approaches a gold vertex.](docs/figures/feedback-guided-search.jpg)
 
 In this schematic, each vertex represents one way to seat all $N$ guests. Both searchers hear one uniformly chosen complaint about their current chart.
 
