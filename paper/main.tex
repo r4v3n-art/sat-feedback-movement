@@ -80,7 +80,7 @@ For every randomized solver that reaches a satisfying assignment, there exist li
 This holds even if the solver knows the entire underlying linear code and may flip any $B$ variables per move. For every solver, some fixed instance witnesses the bound; the instance need not depend on the solver's random bits.
 \end{theorem}
 
-Together, Theorems~\ref{thm:upper} and~\ref{thm:lower} establish the tight minimax order $\Theta(N + N^2/B)$: full assignment jumps ($B=N$) cost $\Theta(N)$ rounds, while single flips ($B=1$) cost $\Theta(N^2)$ in the worst case. For each sufficiently large target size $N$, use $b=2\lfloor N/5\rfloor$ base coordinates. The extended code uses at most $5b/2\le N$ coordinates. Pin any padding coordinates to public zeroes and test these constraints before the secret pins. Dimension and minimum distance are preserved.
+For every sufficiently large $N$ and every $1\le B\le N$, Theorems~\ref{thm:upper} and~\ref{thm:lower} give a tight minimax bound of $\Theta(N + N^2/B)$ moves. In the worst case, full assignment jumps ($B=N$) cost $\Theta(N)$ rounds, while single flips ($B=1$) cost $\Theta(N^2)$.
 
 Our third theorem separates history-aware learning from memoryless local search under \emph{identical} uniform-clause feedback.
 
@@ -200,7 +200,9 @@ Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. In each row let $a,b',c,
 \]
 Encode each ternary even-parity equation by the four ordinary width-$3$ CNF clauses forbidding the four odd-weight tuples. On any even-weight tuple, the number of true literals in each clause equals its Hamming distance from that forbidden odd tuple, which is always odd ($1$ or $3$).
 
-Each original codeword extends uniquely to the auxiliary variables, and the extended code has minimum distance at least $d \ge \delta b$. The total number of variables is $N \le b + 3b/2 = 5b/2$, so $k, d = \Omega(N)$. The formula has $O(N)$ clauses; each original variable occurs at most $13$ times (including its unit pin), and each auxiliary variable occurs at most $8$ times. Unit pins have $1$ (odd) true literal at the secret codeword. Applying Lemma~\ref{lem:charge} yields expected cost $\Omega(k \lceil d/B \rceil) = \Omega(N + N^2/B)$.
+Each original codeword extends uniquely to the auxiliary variables, and the extended code has minimum distance at least $d \ge \delta b$. The extended code uses $n\le b+3b/2=5b/2$ coordinates. The formula has $O(n)$ clauses. Each original variable occurs at most $13$ times (including its unit pin), and each auxiliary variable occurs at most $8$ times. Unit pins have $1$ (odd) true literal at the secret codeword.
+
+For a prescribed sufficiently large $N$, choose $b=2\lfloor N/5\rfloor$, so $n\le 5b/2\le N$. Add $N-n$ coordinates fixed to zero by public unit clauses and check those clauses before the secret pins. Appending the same zero coordinates to every codeword preserves dimension and minimum distance. Since $b=\Theta(N)$, both $k$ and $d$ are $\Omega(N)$. Applying Lemma~\ref{lem:charge} yields expected cost $\Omega(k \lceil d/B \rceil) = \Omega(N + N^2/B)$.
 \end{proof}
 
 \section{Exponential Separation from Memoryless Policies}\label{sec:sep}
