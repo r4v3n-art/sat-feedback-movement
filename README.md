@@ -39,6 +39,8 @@ Think of a test rig where each run reports one failed check and you can change o
 
 ### Two searches on the same cube
 
+![Schematic of a cube of assignments. A crimson path doubles back on the left. On the right, cyan planes intersect and a stepped path approaches a gold vertex.](docs/figures/feedback-guided-search.jpg)
+
 In this schematic, each vertex represents one way to seat all $N$ guests. Both searchers hear one uniformly chosen complaint about their current chart.
 
 **Left (crimson).** The memoryless walker moves one guest chosen uniformly from the complaint. It keeps no record of past complaints and can return to a chart it has already tried. For each fixed $0<\varepsilon<1$, there are families where each guest appears in only a bounded number of rules, yet from a uniformly random chart the walk takes $\Omega((2-\varepsilon)^N)$ moves in expectation.
