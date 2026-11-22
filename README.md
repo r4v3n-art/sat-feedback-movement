@@ -35,6 +35,12 @@ Think of a test rig where each run reports one failed check and you can change o
 
 Memory matters even with the same feedback. On one family of seating problems, the host picks a broken rule uniformly at random each time. Moving a randomly chosen guest from that complaint takes exponentially many moves on average. A solver that remembers the rules and learns from them finishes within `N(N + 1)/2` single-guest moves on every run.
 
+## Relation to earlier work
+
+To our knowledge, this is the first tight bound on how many revisions a solver needs in this hidden-clause, odd-parity model for every batch size from one guest to the whole party. Earlier work studied how many trials it takes to learn from a rejected proposal and how many mistakes it takes to learn parity. Here the solver also has to *get to* its next proposal, and the paper proves how much that can cost even for the best strategy. [Hidden constraint problems](https://arxiv.org/abs/1406.5336) · [Learning parities](https://doi.org/10.1016/j.ipl.2010.10.009)
+
+The dense example where a random walk takes exponential time is due to earlier work. The paper uses it to compare two solvers that receive the same kind of complaint and make different use of their history. [Zhou, He and Nie, Proposition 2](https://pmc.ncbi.nlm.nih.gov/articles/PMC2774825/)
+
 ## Build and verify
 
 Install [Elan](https://lean-lang.org/install/) and use the toolchain and dependency manifest committed here. The proof uses Lean and Mathlib 4.36.0. Run from the repository root.

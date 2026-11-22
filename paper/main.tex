@@ -282,12 +282,16 @@ The audit script rebuilds the declarations, checks their axiom lists and exports
 Lean proves the binomial tail bound for every cutoff in Lemma~\ref{lem:charge}, the exact simplex optimum in Remark~\ref{rem:simplex} for every dimension and batch size, and the exact mean of the triple-first walk. The finite checks in \texttt{check\_feedback.py} enumerate small cube instances, count dense transitions, and exercise the $[7,3,4]$ simplex example from Remark~\ref{rem:simplex}.
 
 \paragraph{Related Work.}
-Gaussian elimination for affine promise CSPs \cite{brakensiek2018}, hidden-CSP trial-and-error oracle models \cite{bei2012}, exponential lower bounds for WalkSAT on planted distributions \cite{alekhnovich2002}, accelerating local search via learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2023} give related algorithms and models. Gao, He and Jiang \cite{gao2026} also obtain bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates in the number $m$ of clauses. The specific contribution here is the rank-sensitive movement bound and matching LDPC lower bound $\Theta(N + N^2/B)$ across batch sizes $B$ in the odd-parity hidden-clause oracle model, together with the equivariant memoryless separation.
+Bei, Chen and Zhang introduced the trial-and-error model for hidden constraints \cite{bei2012}. Ivanyos et al.\ studied several variants in which an oracle reveals information about one violated constraint \cite{ivanyos2018}. In those models a solver may propose a fresh assignment on each trial. In online parity learning, the classical linear-independence argument bounds the number of prediction mistakes by the dimension \cite{buhrman2010}. Gaussian elimination also gives algorithms for affine promise CSPs \cite{brakensiek2018}.
+
+To our knowledge, Theorems~\ref{thm:upper} and~\ref{thm:lower} give the first tight bound on the number of moves across all batch sizes $1\le B\le N$ in the hidden-clause odd-parity model defined here. The upper bound charges each guide correction to the rank of the learned equations. The matching lower bound uses width-three, bounded-occurrence formulas on which each wrong first guess forces a trip to a distant codeword before the next secret bit can be tested. The resulting minimax cost is $\Theta(N+N^2/B)$ even when the solver may randomize.
+
+The dense random-walk family and its exponential slowdown appear in Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}. Theorem~\ref{thm:sep} compares the memoryless walk and the parity learner under the same uniform-clause feedback. Related analyses cover slow walks on planted formulas \cite{alekhnovich2002}, acceleration using learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2023}. Gao, He and Jiang \cite{gao2026} also prove bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates in the number $m$ of clauses.
 
 \paragraph{Open Problems.}
 Can the bounded-occurrence family in Theorem~\ref{thm:sep} be constructed deterministically in time polynomial in $N$ for each fixed $\varepsilon$? Our existence proof chooses permutation layers by counting. Can sparse row representations improve the verified quartic bit-work bound while preserving the rank-sensitive movement guarantee? Finally, what movement bounds hold for hidden Horn or 2-SAT formulas, or when a small fraction of clauses violate the odd-parity promise?
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 
 \bibitem{alekhnovich2002}
 M.~Alekhnovich and E.~Ben-Sasson.
@@ -304,10 +308,20 @@ J.~Brakensiek and V.~Guruswami.
 \newblock Promise constraint satisfaction: structure theory and a symmetric Boolean dichotomy.
 \newblock \href{https://doi.org/10.1137/1.9781611975031.117}{Proc.\ SODA}, 2018.
 
+\bibitem{buhrman2010}
+H.~Buhrman, D.~García-Soriano, and A.~Matsliah.
+\newblock \href{https://doi.org/10.1016/j.ipl.2010.10.009}{Learning parities in the mistake-bound model}.
+\newblock \emph{Information Processing Letters}, 111(1):16--21, 2010.
+
 \bibitem{gallager1962}
 R.~G.~Gallager.
 \newblock Low-density parity-check codes.
 \newblock \emph{IRE Transactions on Information Theory}, 8(1):21--28, 1962.
+
+\bibitem{ivanyos2018}
+G.~Ivanyos, R.~Kulkarni, Y.~Qiao, M.~Santha, and A.~Sundaram.
+\newblock \href{https://arxiv.org/abs/1406.5336}{On the complexity of trial and error for constraint satisfaction problems}.
+\newblock \emph{Journal of Computer and System Sciences}, 92:48--64, 2018.
 
 \bibitem{kramer2023}
 M.~J. Kramer, P.~Boes, and J.~Eisert.
