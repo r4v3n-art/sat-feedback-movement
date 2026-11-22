@@ -33,7 +33,17 @@ Together these bounds give **Θ(N + N²/B)**. Up to constant factors, this is bo
 
 Think of a test rig where each run reports one failed check and you can change only a few settings before the next run. If your next candidate differs in five settings and the rig accepts two changes per run, it takes at least three runs just to reach it. Along the way another failure might change which candidate you want to try. The seating model puts a number on the combined cost of discovering the rules and acting on what you learn.
 
-Memory matters even with the same feedback. On one family of seating problems, the host picks a broken rule uniformly at random each time. Moving a randomly chosen guest from that complaint takes exponentially many moves on average. A solver that remembers the rules and learns from them finishes within `N(N + 1)/2` single-guest moves on every run.
+### Two searches on the same cube
+
+![Schematic of a cube of assignments. A crimson path doubles back on the left. On the right, cyan planes intersect and a stepped path approaches a gold vertex.](docs/figures/feedback-guided-search.jpg)
+
+In this schematic, each vertex represents one way to seat all $N$ guests. Both searchers hear one uniformly chosen complaint about their current chart.
+
+**Left (crimson).** The memoryless walker moves one guest chosen uniformly from the complaint. It keeps no record of past complaints and can return to a chart it has already tried. For each fixed $0<\varepsilon<1$, there are families where each guest appears in only a bounded number of rules, yet from a uniformly random chart the walk takes $\Omega((2-\varepsilon)^N)$ moves in expectation.
+
+**Right (cyan).** Each plane represents an affine parity equation over $\mathbb{F}_2$. Each independent equation halves the set of charts still possible as the promised odd-parity witness. The learner keeps a guide in their intersection and moves up to $B$ guests toward its current guide after each complaint. New feedback can change the guide along the way. The gold point represents one chart the host would accept.
+
+With **one guest per move**, the learner needs at most $N(N+1)/2$ moves on every run, even on the crimson walk’s hard instances. The $\Theta(N+N^2/B)$ label gives the optimal worst-case cost across all promised instances when up to $B$ guests may move at once.
 
 ## Relation to earlier work
 
