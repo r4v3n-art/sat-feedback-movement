@@ -32,7 +32,7 @@
 \author{C.J. Bordeleau\\
 \small Independent Researcher\\
 \small \texttt{r@r4v3n.art}}
-\date{\today}
+\date{November 2026}
 
 \begin{document}
 \maketitle
@@ -78,8 +78,9 @@ The upper bound does not use the width-$3$ restriction: the same rank-sensitive 
 \begin{theorem}[Lower Bound]\label{thm:lower}
 For every randomized solver that terminates almost surely on every promised instance, there exist linear-size, bounded-occurrence instances satisfying the odd-parity promise and fixed, deterministic reporting orders incurring expected cost
 \[
-    \Omega\!\left(N + \frac{N^2}{B}\right).
+    \Omega\!\left(N + \frac{N^2}{B}\right)
 \]
+from any start assignment fixed independently of the instance.
 This holds even if the solver knows the entire underlying linear code and may flip any $B$ variables per move. For every solver, some fixed instance witnesses the bound; the instance need not depend on the solver's random bits.
 \end{theorem}
 
@@ -94,15 +95,15 @@ For every $N \ge 8$ and every unsolved start, the dense walk of Theorem~\ref{thm
 \end{plainremark}
 
 \begin{plainremark}
-The lower bound is stronger than the $\Theta$ statement records. The Lean model (\path{SatWalk/CodeLowerBound.lean}, \texttt{step}) does not require a move to include a reported variable and uses an oblivious reporting order, while the upper bound holds against adaptive reports. The $\Theta(N+N^2/B)$ bound therefore holds for every oracle class in between.
+The lower bound is stronger than the $\Theta$ statement records. The Lean model (\path{SatWalk/CodeLowerBound.lean}, \texttt{step}) does not require a move to include a reported variable and uses a fixed, deterministic priority order, while the upper bound holds against adaptive reports. The $\Theta(N+N^2/B)$ bound therefore holds for every oracle class in between.
 \end{plainremark}
 
 Our third theorem separates history-aware learning from memoryless local search under \emph{identical} uniform-clause feedback.
 
 \begin{theorem}[Separation from Memoryless Policies]\label{thm:sep}
-There is a family of width-$3$ odd-parity formulas on which the uniform random-walk policy (by Proposition~\ref{prop:equiv}, the only memoryless single-flip policy equivariant under signed renamings), without restarts, takes $\Theta(2^N)$ expected flips from a common uniformly random start as well as from a fixed start with one correct bit, whereas the solver of Theorem~\ref{thm:upper} uses at most $N(N+1)/2$ flips under the same uniform-clause oracle. The dense lower bound is due to Papadimitriou \cite{papadimitriou1991} and Zhou, He and Nie \cite[Proposition~2]{zhou2009}; new here are the learner comparison and the bounded-occurrence family.
+There is a family of width-$3$ odd-parity formulas on which the uniform random-walk policy (by Proposition~\ref{prop:equiv}, the only memoryless single-flip policy equivariant under signed renamings), without restarts, takes $\Theta(2^N)$ expected flips from a common uniformly random start as well as from a fixed start with one correct bit, whereas the solver of Theorem~\ref{thm:upper} uses at most $N(N+1)/2$ flips under the same uniform-clause oracle. The dense lower bound is due to Papadimitriou \cite{papadimitriou1991} and Zhou, He and Nie \cite[Proposition~2]{zhou2009}; new here are the learner comparison and a bounded-occurrence family satisfying the odd-parity promise with base approaching $2$, under a shared reporter.
 
-Moreover, for every $0 < \varepsilon < 1$, there exists a bounded-occurrence family with $O_\varepsilon(N)$ clauses giving an $\Omega((2-\varepsilon)^N)$ expected-flip lower bound under both initializations. The same lower bound applies to the uniform random-walk policy, which by Proposition~\ref{prop:equiv} is the only memoryless single-flip policy equivariant under signed renamings, while a randomized variant of the Theorem~\ref{thm:upper} learner respects both symmetries in distribution and retains its pathwise quadratic guarantee.
+Moreover, for every $0<\varepsilon<1$ there is a bounded-occurrence family with $O_\varepsilon(N)$ clauses on which the uniform random-walk policy (by Proposition~\ref{prop:equiv}, the only memoryless single-flip policy equivariant under signed renamings) needs $\Omega((2-\varepsilon)^N)$ expected flips under both initializations, while a randomized variant of the Theorem~\ref{thm:upper} learner respects both symmetries in distribution and keeps its pathwise quadratic guarantee.
 \end{theorem}
 
 \paragraph{Proof Overview.}
@@ -209,9 +210,9 @@ Since $\sum_{j\ge1}4^{-j}=1/3$, some pairing has no nonzero codeword of weight a
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:lower}]
-Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. In each row let $a,b',c,d,e,f$ be the variables at the six sockets, allowing repetitions. Three fresh coordinates $u,v,w$ implement the even check through the four equations
+Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. In each row let $y_1,y_2,y_3,y_4,y_5,y_6$ be the variables at the six sockets, allowing repetitions. Three fresh coordinates $u,v,w$ implement the even check through the four equations
 \[
-    a \xor b' \xor u = 0,\quad u \xor c \xor v = 0,\quad v \xor d \xor w = 0,\quad w \xor e \xor f = 0.
+    y_1 \xor y_2 \xor u = 0,\quad u \xor y_3 \xor v = 0,\quad v \xor y_4 \xor w = 0,\quad w \xor y_5 \xor y_6 = 0.
 \]
 Encode each ternary even-parity equation by the four ordinary width-$3$ CNF clauses forbidding the four odd-weight tuples. On any even-weight tuple, the number of true literals in each clause equals its Hamming distance from that forbidden odd tuple, which is always odd ($1$ or $3$).
 
@@ -263,27 +264,27 @@ We choose a sparse subfamily of the dense triples by counting collections of per
 \begin{proof}[Proof of the sparse bound in Theorem~\ref{thm:sep}]
 Fix $0<\varepsilon<1$, put $t=2-\varepsilon$ and $\rho=2-\varepsilon/2$, and choose an integer $L>3\rho/(2-\rho)$. Since $t/\rho<1$, there is an integer $A\ge4$ with $t^A\le\rho^{A-2}$. Set
 \[
- K=2A(2L+3),\qquad r=\lceil N/K\rceil,\qquad a=(2L+3)r,\qquad b=N-a.
+ K=2A(2L+3),\qquad \ell=\lceil N/K\rceil,\qquad a=(2L+3)\ell,\qquad \beta=N-a.
 \]
-For $N\ge K$, the inequality $Kr\le N+K-1$ gives $Aa\le N$. Hence $4a\le N$ and $t^N\le\rho^{b-a}$, by writing $N=Aa+(N-Aa)$.
+For $N\ge K$, the inequality $K\ell\le N+K-1$ gives $Aa\le N$. Hence $4a\le N$ and $t^N\le\rho^{\beta-a}$, by writing $N=Aa+(N-Aa)$.
 
-Choose an integer $s$ with $(1-1/K)^s<1/8$ and draw $D=Ks$ independent uniform permutations of the $N$ variables. Use the directed edges $i\to\pi(i)$ from all $D$ permutations. For given $r$-sets $X,Y$, one permutation sends no element of $X$ into $Y$ with probability at most $(1-r/N)^r\le(1-1/K)^r$. Since $rK\ge N$, the probability that all $D$ miss is at most $8^{-N}$. There are at most $4^N$ ordered pairs of sets. Thus some choice gives an edge from $X$ to $Y$ for every such pair.
+Choose an integer $s$ with $(1-1/K)^s<1/8$ and draw $D=Ks$ independent uniform permutations of the $N$ variables. Use the directed edges $i\to\pi(i)$ from all $D$ permutations. The neighbors of a vertex are its out-neighbors under these edges; self-loops are possible. For given $\ell$-sets $X,Y$, one permutation sends no element of $X$ into $Y$ with probability at most $(1-\ell/N)^\ell\le(1-1/K)^\ell$. Since $\ell K\ge N$, the probability that all $D$ miss is at most $8^{-N}$. There are at most $4^N$ ordered pairs of sets. Thus some choice gives an edge from $X$ to $Y$ for every such pair.
 
 Keep the $N$ unit pins. For each owner $i$ include $(x_i\lor\neg x_j\lor\neg x_k)$ for each unordered pair of distinct out-neighbors $j,k$ different from $i$. There are at most $(1+2^D)N$ clauses. A variable can occur in triples owned by itself or by one of its at most $D$ predecessors, so its total occurrence count is at most $1+3(D+1)2^D$.
 
-Let $S$ be the set of true variables and suppose $a<j=|S|<b$. Fewer than $r$ owners have fewer than $2L+2$ distinct neighbors in $S$. Otherwise the neighbors of $r$ such owners would leave an untouched $r$-subset of $S$, since $|S|\ge(2L+3)r$. Among the $U=N-j\ge2r$ false owners, at least $U/2$ therefore have at least $2L+2$ true neighbors. Each contributes at least $2L$ violated triples. Writing $T$ for their total, we obtain $T\ge LU$. Under the uniform-clause walk the down/up probability ratio is $2T/(3U+T)\ge\rho$ at every assignment in this band.
+Let $S$ be the set of true variables and suppose $a<j=|S|<\beta$. Fewer than $\ell$ false owners have fewer than $2L+2$ distinct out-neighbors in $S$. Otherwise the out-neighbors of $\ell$ such owners would leave an untouched $\ell$-subset of $S$, since $|S|\ge(2L+3)\ell$. Among the $U=N-j\ge 2\ell$ false owners, at least $U/2$ therefore have at least $2L+2$ true out-neighbors. Each contributes at least $2L$ violated triples. Writing $T$ for their total, we obtain $T\ge LU$. Under the uniform-clause walk the down/up probability ratio is $2T/(3U+T)\ge\rho$ at every assignment in this band.
 
-For the hitting-time estimate, write $z(j)=\max(0,\min(j,b)-a)$ and
+For the hitting-time estimate, write $z(j)=\max(0,\min(j,\beta)-a)$ and
 \[
- V(j)=\frac{\rho^{b-a}-\rho^{z(j)}}{\rho-1}.
+ V(j)=\frac{\rho^{\beta-a}-\rho^{z(j)}}{\rho-1}.
 \]
-Inside the band an upward move decreases $V$ by $\rho^{j-a}$ and a downward move increases it by $\rho^{j-1-a}$. The ratio bound gives nonnegative expected change there. At or below $a$ one move can lose at most one unit, and at or above $b$ the potential is zero. Thus $V(j)\le1+\E[V(j_{\rm next})\mid x]$ at every unsolved assignment $x$ of level $j$. This bound conditions on the whole assignment.
+Inside the band an upward move decreases $V$ by $\rho^{j-a}$ and a downward move increases it by $\rho^{j-1-a}$. The ratio bound gives nonnegative expected change there. At or below $a$ one move can lose at most one unit, and at or above $\beta$ the potential is zero. Thus $V(j)\le1+\E[V(j_{\rm next})\mid x]$ at every unsolved assignment $x$ of level $j$. This bound conditions on the whole assignment.
 
 Let $H_h(x)$ be the expected number of moves up to success or the horizon $h$, whichever comes first. Choose $M>\max(1,\max_j V(j))$. Induction on $h$ in the one-step recurrence gives
 \[
  H_h(x)\ge[1-(1-1/M)^h]V(j).
 \]
-Indeed, if the current coefficient is $c$, then $1+c\,\E V(j_{\rm next})\ge cV(j)+1-c\ge[c+(1-c)/M]V(j)$. At success both sides vanish. For large $h$ the coefficient exceeds $1/2$. For $j<b$, we have $V(j)\ge\rho^{b-a-1}\ge\rho^{b-a}/2$, so the mean hitting time is at least $t^N/4$. This covers the specified start with one true bit. Under uniform initialization $\Prb(j\le N/2)\ge1/2$ by complementation, and $N/2<b$. Averaging gives the lower bound $t^N/8$.
+Indeed, if the current coefficient is $c$, then $1+c\,\E V(j_{\rm next})\ge cV(j)+1-c\ge[c+(1-c)/M]V(j)$. At success both sides vanish. For large $h$ the coefficient exceeds $1/2$. For $j<\beta$, we have $V(j)\ge\rho^{\beta-a-1}\ge\rho^{\beta-a}/2$, so the mean hitting time is at least $t^N/4$. This covers the specified start with one true bit. Under uniform initialization $\Prb(j\le N/2)\ge1/2$ by complementation, and $N/2<\beta$. Averaging gives the lower bound $t^N/8$.
 \end{proof}
 
 \section{Formal Verification, Empirical Checks, and Related Work}\label{sec:verif}
@@ -295,7 +296,7 @@ Lean~4.36.0 and the matching Mathlib release verify the three main results again
 \item \texttt{theorem\_lower\_bound} combines finite socket counting, parity-to-CNF compilation, and the first-examination charge. For any almost-surely terminating solver with measurable cost, one fixed promised formula has the required expected cost over its random tape.
 \item \texttt{theorem\_memoryless\_separation} gives dense and bounded-occurrence families for every signed-equivariant memoryless policy, under both initializations. The learner's guarantee holds on every history of those same formulas. A companion theorem couples whole learner histories under signed renaming.
 \end{itemize}
-The audit script rebuilds the declarations, checks their axiom lists and exports their proof terms for kernel replay. The only axioms used are propositional extensionality, classical choice and quotient soundness. The public \href{https://github.com/r4v3n-art/sat-feedback-movement}{companion repository}, frozen at tag \texttt{v1.0-arxiv} (commit \texttt{TO\_BE\_SET\_AFTER\_MERGE}), contains the paper, proofs and reproduction commands.
+The audit script rebuilds the declarations, checks their axiom lists and exports their proof terms for kernel replay. The only axioms used are propositional extensionality, classical choice and quotient soundness. The public \href{https://github.com/r4v3n-art/sat-feedback-movement}{companion repository}, frozen at tag \texttt{v1.0-arxiv}, contains the paper, proofs and reproduction commands.
 
 \paragraph{Calibration.}
 Lean proves the binomial tail bound for every cutoff in Lemma~\ref{lem:charge}, the exact simplex optimum in Remark~\ref{rem:simplex} for every dimension and batch size, and the exact mean of the triple-first walk. The finite checks in \texttt{check\_feedback.py} enumerate small cube instances, count dense transitions, and exercise the $[7,3,4]$ simplex example from Remark~\ref{rem:simplex}.
@@ -307,7 +308,7 @@ The mistake-bound model of online learning goes back to Littlestone \cite{little
 
 What is new, beyond that online parity mistake bound of at most $N$, is the movement cost of acting on those mistakes under a batch limit $B$: an extra $\Theta(N^2/B)$ term, together with a matching lower bound on bounded-occurrence odd-parity formulas. We determine the minimax movement cost up to constant factors.
 
-Random-walk SAT algorithms include Papadimitriou's polynomial-time algorithm for $2$-SAT \cite{papadimitriou1991}, Sch\"oning's exponential local-search algorithm for $k$-SAT \cite{schoning1999}, and WalkSAT \cite{selman1994}. Analyses of WalkSAT on XOR-SAT appear in Semerjian and Monasson \cite{semerjian2003}, Barthel, Hartmann and Weigt \cite{barthel2003}, and Guidetti and Young \cite{guidetti2011}. The dense random-walk family and its exponential slowdown appear in Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}, following Papadimitriou \cite{papadimitriou1991}. Theorem~\ref{thm:sep} compares the memoryless walk and the parity learner under the same uniform-clause feedback. Related analyses cover slow walks on planted formulas \cite{alekhnovich2007}, acceleration using learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2026}. Gao, He and Jiang \cite{gao2026} also prove bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates in the number $m$ of clauses.
+Random-walk SAT algorithms include Papadimitriou's polynomial-time algorithm for $2$-SAT \cite{papadimitriou1991}, Sch\"oning's exponential local-search algorithm for $k$-SAT \cite{schoning1999}, and WalkSAT \cite{selman1994}. Analyses of WalkSAT on XOR-SAT appear in Semerjian and Monasson \cite{semerjian2003}, Barthel, Hartmann and Weigt \cite{barthel2003}, and Guidetti and Young \cite{guidetti2011}. The dense random-walk family and its exponential slowdown appear in Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}, following Papadimitriou \cite{papadimitriou1991}. Theorem~\ref{thm:sep} compares the memoryless walk and the parity learner under the same uniform-clause feedback; what is new is a bounded-occurrence family satisfying the odd-parity promise with base approaching $2$, under a shared reporter. Related analyses cover slow walks on planted formulas \cite{alekhnovich2007}, acceleration using learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2026}. Gao, He and Jiang \cite{gao2026} also prove bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates and a $2^{\Omega(m)}$ WalkSAT lower bound in the number $m$ of clauses.
 
 The sparse linear-distance codes in the lower bound continue Gallager's LDPC construction \cite{gallager1962}, expander codes \cite{sipser1996}, and the modern analysis of sparse graph codes \cite{richardson2008}. The movement cost of chasing a changing guide is related to convex body chasing \cite{friedman1993} and nested convex body chasing \cite{bansal2018}.
 

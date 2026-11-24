@@ -8,7 +8,7 @@ C.J. Bordeleau · Independent Researcher · November 2026
 
 The crimson walker uses only the latest report of a broken rule. The cyan learner remembers earlier reports and uses their parity equations to guide its next move. [How to read the diagram](#two-searches-on-the-same-cube)
 
-How many times do you have to revise a plan when each rejection reveals just one broken rule? This paper answers that question for a class of Boolean constraints where you can change only a few decisions at a time.
+How many times do you have to revise a plan when each rejection reveals just one broken rule? This paper answers that question for a class of Boolean constraints where you can change only a few decisions at a time. The odd-parity promise makes the problem affine (XOR-SAT, polynomial-time); the results concern movement cost, not general SAT.
 
 [Read the paper (PDF)](paper/main.pdf) · [LaTeX source](paper/main.tex) · [Lean theorem statements and axiom audit](SatWalk/Main.lean)
 
@@ -97,4 +97,4 @@ From `paper/`, run `pdflatex main.tex` twice (run `bibtex` as well if a `.bib` f
 
 ## Citation and licensing
 
-Use [CITATION.cff](CITATION.cff) to cite the preprint or software artifact. The intended artifact tag is `v1.0-arxiv` (commit hash filled after merge). The Lean code, scripts and build configuration are licensed under [Apache-2.0](LICENSE). The manuscript and PDF are licensed under [CC BY 4.0](paper/LICENSE.md).
+Use [CITATION.cff](CITATION.cff) to cite the preprint or software artifact. The intended artifact tag is `v1.0-arxiv`. The Lean code, scripts and build configuration are licensed under [Apache-2.0](LICENSE). The manuscript and PDF are licensed under [CC BY 4.0](paper/LICENSE.md).
