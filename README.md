@@ -1,4 +1,6 @@
-# How Far Can a SAT Search Move on One Piece of Feedback?
+# Learning from Violated Clauses in Hidden SAT
+
+*Tight Movement Bounds under an Odd-Parity Promise*
 
 C.J. Bordeleau · Independent Researcher · November 2026
 
