@@ -6,6 +6,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     env:
       MATHLIB_NO_CACHE_ON_UPDATE: "1"
     steps:
@@ -20,7 +21,7 @@ jobs:
         run: |
           modules=$(sed -n 's/^import \(Mathlib\.[A-Za-z0-9_.]*\)$/\1/p' SatWalk/*.lean | sort -u)
           lake exe cache get $modules
-      - name: Check Lean proofs and axiom lists
-        run: ./scripts/verify.sh --axioms-only
+      - name: Check Lean proofs, axiom lists, and kernel replay
+        run: ./scripts/verify.sh
       - name: Run the finite calibration examples
         run: python3 scripts/check_feedback.py
