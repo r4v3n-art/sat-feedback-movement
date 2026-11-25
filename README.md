@@ -98,3 +98,7 @@ From `paper/`, run `pdflatex main.tex` twice (run `bibtex` as well if a `.bib` f
 ## Citation and licensing
 
 Use [CITATION.cff](CITATION.cff) to cite the preprint or software artifact. The intended artifact tag is `v1.0-arxiv`. The Lean code, scripts and build configuration are licensed under [Apache-2.0](LICENSE). The manuscript and PDF are licensed under [CC BY 4.0](paper/LICENSE.md).
+
+## Use of AI tools
+
+The author used AI assistants (OpenAI Codex and Google Gemini) extensively for drafting, developing proofs, and writing the Lean 4 formalization. The main results are machine-checked in Lean 4; the formalization, not manual review, is the primary basis for their correctness. The author takes responsibility for the contents.
