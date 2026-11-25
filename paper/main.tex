@@ -1,14 +1,12 @@
 \documentclass[11pt,a4paper]{article}
 
 \usepackage[a4paper,margin=2.5cm]{geometry}
-\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage[english]{babel}
-\IfFontExistsTF{Noto Sans}
-  {\setmainfont{Noto Sans}}
-  {\setmainfont{NotoSans-Regular.ttf}[BoldFont=NotoSans-Bold.ttf,
-    ItalicFont=NotoSans-Italic.ttf,BoldItalicFont=NotoSans-BoldItalic.ttf]}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{mathtools}
+\usepackage{url}
 \usepackage[hidelinks]{hyperref}
 \usepackage{microtype}
 \setlength{\emergencystretch}{2em}
@@ -23,6 +21,7 @@
 \newtheorem{definition}[theorem]{Definition}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
+\newtheorem*{plainremark}{Remark}
 
 \newcommand{\F}{\mathbb{F}}
 \newcommand{\E}{\mathbb{E}}
@@ -33,22 +32,22 @@
 \author{C.J. Bordeleau\\
 \small Independent Researcher\\
 \small \texttt{r@r4v3n.art}}
-\date{November 21, 2026}
+\date{November 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-We study the query and movement complexity of local search in a hidden-formula Boolean satisfiability (SAT) model. A hidden CNF formula on $N$ variables with clause width at most $3$ is promised to admit a satisfying assignment in which every clause has an odd number of true literals. Starting from an arbitrary assignment, an oracle returns one violated clause per round; a legal move flips up to $B$ variables, including at least one variable from the reported clause, with no free restarts or hypothetical queries.
+We study the query and movement complexity of local search in a hidden-formula Boolean satisfiability (SAT) model. A hidden CNF formula on $N$ variables with clause width at most $3$ is promised to admit a satisfying assignment in which every clause has an odd number of true literals. The odd-parity promise makes the problem affine (XOR-SAT), solvable by Gaussian elimination \cite{schaefer1978}; our bounds concern query and movement cost and say nothing about general SAT or P versus NP. By contrast, 1-in-3-SAT, which requires exactly one true literal in each clause, is NP-complete \cite{schaefer1978}. Starting from an arbitrary assignment, an oracle returns one violated clause per round; a legal move flips up to $B$ variables, including at least one variable from the reported clause, with no free restarts or hypothetical queries.
 
-We establish a tight minimax bound of $\Theta(N + N^2/B)$ moves across the full range $1 \le B \le N$. For the upper bound, we give a deterministic polynomial-time solver that learns affine parity equations over $\F_2$ and repairs a guide assignment via sparse pivot elimination, using at most $r(r+1)/2$ flips when $B=1$ and at most $\sum_{i=1}^r\lceil i/B\rceil$ moves in general, where $r \le N$ is the final rank of learned equations. For the lower bound, we construct linear-size, bounded-occurrence instances from constant-rate, linear-distance low-density parity-check (LDPC) codes and show that every randomized solver requires $\Omega(N + N^2/B)$ expected moves under a fixed deterministic reporting order. Finally, we prove an exponential separation under identical uniform-clause feedback: there exist bounded-occurrence families with $O_\varepsilon(N)$ clauses on which every memoryless single-flip policy invariant under variable renaming and independent bit complementation requires $\Omega((2-\varepsilon)^N)$ expected flips, whereas our symmetry-respecting parity learner retains its $O(N^2)$ pathwise guarantee. Lean~4 verifies all three movement and separation results, termination of the learner, and polynomial bit complexity in a dense bit-operation model.
+We establish a tight minimax bound of $\Theta(N + N^2/B)$ moves across the full range $1 \le B \le N$. For the upper bound, we give a deterministic polynomial-time solver that learns affine parity equations over $\F_2$ and repairs a guide assignment via sparse pivot elimination, using at most $r(r+1)/2$ flips when $B=1$ and at most $\sum_{i=1}^r\lceil i/B\rceil$ moves in general, where $r \le N$ is the final rank of learned equations. For the lower bound, we construct linear-size, bounded-occurrence instances from constant-rate, linear-distance low-density parity-check (LDPC) codes and show that every randomized solver requires $\Omega(N + N^2/B)$ expected moves under a fixed deterministic reporting order. Finally, we prove an exponential separation under identical uniform-clause feedback: there exist families on which the uniform random-walk policy (by Proposition~\ref{prop:equiv}, the only memoryless single-flip policy equivariant under signed renamings) requires $\Theta(2^N)$ expected flips, and, for every $0<\varepsilon<1$, bounded-occurrence families with $O_\varepsilon(N)$ clauses on which that same policy requires $\Omega((2-\varepsilon)^N)$ expected flips, whereas our symmetry-respecting parity learner retains its $O(N^2)$ pathwise guarantee. Lean~4 verifies all three movement and separation results, termination of the learner, and polynomial bit complexity in a dense bit-operation model.
 \end{abstract}
 
 \section{Introduction, Model, and Main Results}
 
 Local search solvers for SAT modify a current assignment in response to violated clauses. In a hidden-formula setting, each reported clause gives the solver new information about the target, but the solver cannot teleport directly to a new candidate. It has to walk there, changing at most $B$ variables per round.
 
-In general 3-SAT, the difficulty of computing a consistent assignment gets tangled up with the cost of walking to it. The odd-parity promise separates those two problems cleanly. Each clause yields a linear equation over $\F_2$ that the promised witness satisfies. Maintaining a candidate consistent with past feedback therefore takes polynomial time. That leaves the movement cost exposed, letting us pin down how many steps a solver needs to act on what it learns.
+In general 3-SAT, the difficulty of computing a consistent assignment gets tangled up with the cost of walking to it. The odd-parity promise separates those two problems cleanly. Each clause yields a linear equation over $\F_2$ that the promised witness satisfies. Maintaining a candidate consistent with past feedback therefore takes polynomial time. That leaves the movement cost exposed, letting us pin down how many steps a solver needs to act on what it learns. The odd-parity promise makes the problem affine (XOR-SAT), solvable by Gaussian elimination \cite{schaefer1978}; our bounds concern query and movement cost and say nothing about general SAT or P versus NP. By contrast, 1-in-3-SAT, which requires exactly one true literal in each clause, is NP-complete \cite{schaefer1978}.
 
 \paragraph{The Hidden-Formula Odd-Parity Model.}
 Fix a hidden CNF formula $\Phi$ on $N$ Boolean variables with clauses of width at most $3$. Width counts literal positions, including any repeated occurrences. The searcher knows $N$ and is given the following promise: there exists a witness assignment $x^* \in \{0,1\}^N$ making an \emph{odd number of literals true in every clause} of $\Phi$. Thus, a $3$-literal clause may have either $1$ or $3$ true literals under $x^*$.
@@ -57,9 +56,9 @@ Search begins at an arbitrary assignment $x^{(0)} \in \{0,1\}^N$. At each round:
 \begin{enumerate}
     \item If the current assignment $x$ satisfies $\Phi$, the oracle reports \textsc{SAT} and the search terminates.
     \item Otherwise, the oracle returns one entire violated clause $C$ of $\Phi$ (including literal signs and variable indices).
-    \item A legal move flips up to $B$ distinct variables ($1 \le B \le N$), including at least one variable occurring in $C$; the remaining flipped variables may be arbitrary.
+    \item A legal \emph{move} flips up to $B$ distinct variables ($1 \le B \le N$), including at least one variable occurring in $C$; the remaining flipped variables may be arbitrary.
 \end{enumerate}
-A run ending in success after $m$ moves uses $m+1$ oracle reports. There are no free restarts, hypothetical queries, or final jumps. For lower bounds, internal computation and memory may be arbitrary. Our upper-bound algorithm runs in polynomial time and space, including all internal computations.
+We use \emph{move} for one such round, \emph{flip} for changing a single variable, and, in the algorithm of Section~\ref{sec:upper}, \emph{guide update} for a rank-increasing repair of the stored guide assignment. A run ending in success after $m$ moves uses $m+1$ oracle reports. There are no free restarts, hypothetical queries, or final jumps. For lower bounds, internal computation and memory may be arbitrary. Our upper-bound algorithm runs in polynomial time and space, including all internal computations.
 
 \paragraph{Main Results.}
 Our first two theorems pin down the exact worst-case movement complexity as a function of $N$ and the batch size $B$.
@@ -72,26 +71,43 @@ There is a deterministic polynomial-time solver that, for $B = 1$, makes at most
 moves. These bounds hold pathwise from every starting assignment and for every legal sequence of oracle reports.
 \end{theorem}
 
+\begin{plainremark}
+The upper bound does not use the width-$3$ restriction: the same rank-sensitive movement analysis applies to odd-parity formulas of any clause width. Width $3$ is used only to realize the matching lower bound of Theorem~\ref{thm:lower}.
+\end{plainremark}
+
 \begin{theorem}[Lower Bound]\label{thm:lower}
-For every randomized solver that reaches a satisfying assignment, there exist linear-size, bounded-occurrence instances satisfying the odd-parity promise and fixed, deterministic reporting orders incurring expected cost
+For every randomized solver that terminates almost surely on every promised instance, there exist linear-size, bounded-occurrence instances satisfying the odd-parity promise and fixed, deterministic reporting orders incurring expected cost
 \[
-    \Omega\!\left(N + \frac{N^2}{B}\right).
+    \Omega\!\left(N + \frac{N^2}{B}\right)
 \]
+from any start assignment fixed independently of the instance.
 This holds even if the solver knows the entire underlying linear code and may flip any $B$ variables per move. For every solver, some fixed instance witnesses the bound; the instance need not depend on the solver's random bits.
 \end{theorem}
 
-For every sufficiently large $N$ and every $1\le B\le N$, Theorems~\ref{thm:upper} and~\ref{thm:lower} give a tight minimax bound of $\Theta(N + N^2/B)$ moves. In the worst case, full assignment jumps ($B=N$) cost $\Theta(N)$ rounds, while single flips ($B=1$) cost $\Theta(N^2)$.
+For every $N \ge 5$ and every $1\le B\le N$, Theorems~\ref{thm:upper} and~\ref{thm:lower} give a tight minimax bound of $\Theta(N + N^2/B)$ moves. In the worst case, full assignment jumps ($B=N$) cost $\Theta(N)$ rounds, while single flips ($B=1$) cost $\Theta(N^2)$.
+
+\begin{plainremark}
+The Lean development records the following explicit constants. In Lemma~\ref{lem:ldpc}, distinct codewords differ on more than $2\lfloor m/26244\rfloor$ coordinates; combined with even weight this yields $d \ge 2\lfloor m/26244\rfloor + 2$, so one may take $\delta = 1/26244$. For every $N \ge 5$ and every $B \ge 1$, some promised instance with at most $6N$ clauses and at most $13$ occurrences per variable satisfies
+\[
+  N + \bigl\lfloor N^2/B\bigr\rfloor \;\le\; 5{,}248{,}820 \cdot \E[\text{moves}].
+\]
+For every $N \ge 8$ and every unsolved start, the dense walk of Theorem~\ref{thm:sep} obeys $2^N/3584 \le \E \le 4\cdot 2^N$.
+\end{plainremark}
+
+\begin{plainremark}
+The lower bound is stronger than the $\Theta$ statement records. The Lean model (\path{SatWalk/CodeLowerBound.lean}, \texttt{step}) does not require a move to include a reported variable and uses a fixed, deterministic priority order, while the upper bound holds against adaptive reports. The $\Theta(N+N^2/B)$ bound therefore holds for every oracle class in between.
+\end{plainremark}
 
 Our third theorem separates history-aware learning from memoryless local search under \emph{identical} uniform-clause feedback.
 
 \begin{theorem}[Separation from Memoryless Policies]\label{thm:sep}
-There is a family of width-$3$ odd-parity formulas on which a uniform random variable flip in a uniformly random violated clause, without restarts, takes $\Theta(2^N)$ expected flips from a common uniformly random start as well as from a fixed start with one correct bit, whereas the solver of Theorem~\ref{thm:upper} uses at most $N(N+1)/2$ flips under the same uniform-clause oracle.
+There is a family of width-$3$ odd-parity formulas on which the uniform random-walk policy (by Proposition~\ref{prop:equiv}, the only memoryless single-flip policy equivariant under signed renamings), without restarts, takes $\Theta(2^N)$ expected flips from a common uniformly random start as well as from a fixed start with one correct bit, whereas the solver of Theorem~\ref{thm:upper} uses at most $N(N+1)/2$ flips under the same uniform-clause oracle. The dense lower bound is due to Papadimitriou \cite{papadimitriou1991} and Zhou, He and Nie \cite[Proposition~2]{zhou2009}; new here are the learner comparison and a bounded-occurrence family satisfying the odd-parity promise with base approaching $2$, under a shared reporter.
 
-Moreover, for every sufficiently small $\varepsilon > 0$, there exists a bounded-occurrence family with $O_\varepsilon(N)$ clauses giving an $\Omega((2-\varepsilon)^N)$ expected-flip lower bound under both initializations. The same lower bound applies to every memoryless single-flip policy invariant under variable renaming and independent bit complementation, while a randomized variant of the Theorem~\ref{thm:upper} learner respects both symmetries in distribution and retains its pathwise quadratic guarantee.
+Moreover, for every $0<\varepsilon<1$ there is a bounded-occurrence family with $O_\varepsilon(N)$ clauses on which the uniform random-walk policy (by Proposition~\ref{prop:equiv}, the only memoryless single-flip policy equivariant under signed renamings) needs $\Omega((2-\varepsilon)^N)$ expected flips under both initializations, while a randomized variant of the Theorem~\ref{thm:upper} learner respects both symmetries in distribution and keeps its pathwise quadratic guarantee.
 \end{theorem}
 
 \paragraph{Proof Overview.}
-For the upper bound (Theorem~\ref{thm:upper}), the solver tracks a moving guide assignment $h$ that satisfies every parity equation learned so far. When a reported clause disagrees with $h$ on parity, the rank increases by one. A pivot-only update shifts $h$ in at most $i$ coordinates on the $i$-th revision. Meanwhile, the real assignment $x$ chases $h$ at up to $B$ flips per round. Even when a new clause interrupts the walk, the ceiling potential $\lceil d_H(x,h)/B\rceil$ charges at most $\lceil i/B\rceil$ additional moves for the shift.
+For the upper bound (Theorem~\ref{thm:upper}), the solver tracks a moving guide assignment $h$ that satisfies every parity equation learned so far. When a reported clause disagrees with $h$ on parity, the rank increases by one. A pivot-only update shifts $h$ in at most $i$ coordinates on the $i$-th guide update. Meanwhile, the real assignment $x$ chases $h$ at up to $B$ flips per round. Even when a new clause interrupts the walk, the ceiling potential $\lceil d_H(x,h)/B\rceil$ charges at most $\lceil i/B\rceil$ additional moves for the shift.
 
 For the lower bound (Theorem~\ref{thm:lower}), the adversary hides a secret message in a sparse, linear-distance LDPC code. It examines secret bits only when $x$ lands on a codeword. A wrong guess on the first examination of a bit forces the solver to visit a different codeword. Each such mistake costs $\Omega(\lceil N/B\rceil)$ moves. Under a uniform secret the solver makes $\Omega(N)$ first-examination mistakes in expectation.
 
@@ -109,37 +125,37 @@ Each stored equation asserts that the $\F_2$-sum of the truth bits of a previous
 
 When the oracle returns a violated clause $C$ at $x$:
 \begin{enumerate}
-    \item Evaluate the parity of the literals of $C$ at $h$. If $h$ violates the parity equation of $C$, append this equation to the stored system and repair $h$ so that it satisfies all stored equations (including the new one).
+    \item Evaluate the parity of the literals of $C$ at $h$. If $h$ violates the parity equation of $C$, append this equation to the stored system and repair $h$ so that it satisfies all stored equations (including the new one). This rank-increasing repair is a guide update.
     \item Now $C$ has odd parity at $h$, so at least one literal of $C$ is true at $h$. Since $C$ is violated at $x$, all literals of $C$ are false at $x$. Hence at least one variable in $C$ differs between $x$ and $h$.
     \item For $B=1$, flip one such differing variable in $C$ toward $h$. For general $B$, flip $\min(B, d_H(x,h))$ differing variables toward $h$, including at least one from $C$, where $d_H$ denotes Hamming distance.
 \end{enumerate}
 Note that the algorithm accepts as soon as the oracle reports \textsc{SAT}, even if the current satisfying assignment does not satisfy the odd-parity equations.
 
 \begin{lemma}[Rank Increase and Sparse Repair]\label{lem:repair}
-Every revision increases the rank of the stored linear system by $1$, so there are at most $r \le N$ revisions. Furthermore, the $i$-th revision can be performed so that $d_H(h_{\mathrm{old}}, h_{\mathrm{new}}) \le i$.
+Every guide update increases the rank of the stored linear system by $1$, so there are at most $r \le N$ guide updates. Furthermore, the $i$-th guide update can be performed so that $d_H(h_{\mathrm{old}}, h_{\mathrm{new}}) \le i$.
 \end{lemma}
 
 \begin{proof}
-Suppose the coefficient row of $C$ were a linear combination of previously stored coefficient rows. Because all equations are consistent with the common witness $x^*$, the right-hand side of $C$'s equation would equal the same linear combination of the previous right-hand sides. Since $h$ already satisfies all previous equations, $h$ would automatically satisfy $C$'s equation, contradicting that a revision was triggered. Thus the new row is linearly independent, and the rank increases by $1$.
+Suppose the coefficient row of $C$ were a linear combination of previously stored coefficient rows. Because all equations are consistent with the common witness $x^*$, the right-hand side of $C$'s equation would equal the same linear combination of the previous right-hand sides. Since $h$ already satisfies all previous equations, $h$ would automatically satisfy $C$'s equation, contradicting that a guide update was triggered. Thus the new row is linearly independent, and the rank increases by $1$.
 
-At the $i$-th revision, write the $i$ stored equations as $A z = b$ where $A \in \F_2^{i \times N}$ has full row rank $i$. Since $h_{\mathrm{old}}$ satisfies the first $i-1$ equations and violates the $i$-th, repairing $h_{\mathrm{old}}$ to $h_{\mathrm{new}} = h_{\mathrm{old}} \xor v$ is equivalent to solving $A v = e_i = (0,\dots,0,1)^\top$. Choose $i$ pivot columns of $A$ spanning $\F_2^i$ and set all non-pivot coordinates of $v$ to $0$. The resulting unique solution $v$ has Hamming weight at most $i$.
+At the $i$-th guide update, write the $i$ stored equations as $A z = b$ where $A \in \F_2^{i \times N}$ has full row rank $i$. Since $h_{\mathrm{old}}$ satisfies the first $i-1$ equations and violates the $i$-th, repairing $h_{\mathrm{old}}$ to $h_{\mathrm{new}} = h_{\mathrm{old}} \xor v$ is equivalent to solving $A v = e_i = (0,\dots,0,1)^\top$. Choose $i$ pivot columns of $A$ spanning $\F_2^i$ and set all non-pivot coordinates of $v$ to $0$. The resulting unique solution $v$ has Hamming weight at most $i$.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:upper}]
-Define the potential $\Psi = d_H(x, h)$. Initially $\Psi = 0$. By Lemma~\ref{lem:repair}, the $i$-th revision increases $\Psi$ by at most $i$. Every single bit flip performed by the algorithm moves $x$ strictly closer to $h$, decreasing $\Psi$ by $1$ (even if another revision occurs before $x$ reaches $h$). Since $\Psi \ge 0$ always, the total number of bit flips $F$ satisfies
+Define the potential $\Psi = d_H(x, h)$. Initially $\Psi = 0$. By Lemma~\ref{lem:repair}, the $i$-th guide update increases $\Psi$ by at most $i$. Every single bit flip performed by the algorithm moves $x$ strictly closer to $h$, decreasing $\Psi$ by $1$ (even if another guide update occurs before $x$ reaches $h$). Since $\Psi \ge 0$ always, the total number of bit flips $F$ satisfies
 \[
     F + \Psi_{\mathrm{final}} \le \sum_{i=1}^r i = \frac{r(r+1)}{2}.
 \]
 This immediately proves the $B=1$ bound.
 
-For a batch of size at most $B$, use $P=\lceil d_H(x,h)/B\rceil$. Revising the guide at rank $i$ increases $P$ by at most $\lceil i/B\rceil$, by the triangle inequality and subadditivity of the ceiling. After the guide update a rejected clause has a literal on which $x$ and $h$ differ. The move consumes $\min(B,d_H(x,h))$ differences, decreasing $P$ by one. Initially $P=0$, so each prefix with $m$ moves and $r$ learned rows satisfies
+For a batch of size at most $B$, use $P=\lceil d_H(x,h)/B\rceil$. Updating the guide at rank $i$ increases $P$ by at most $\lceil i/B\rceil$, by the triangle inequality and subadditivity of the ceiling. After the guide update a rejected clause has a literal on which $x$ and $h$ differ. The move consumes $\min(B,d_H(x,h))$ differences, decreasing $P$ by one. Initially $P=0$, so each prefix with $m$ moves and $r$ learned rows satisfies
 \[
   m + \left\lceil\frac{d_H(x,h)}{B}\right\rceil
   \le \sum_{i=1}^r\left\lceil\frac{i}{B}\right\rceil .
 \]
 Each summand is at most $1+i/B$. Taking the integer part gives the stated corollary. When $B\ge r$ the sum equals $r$. A rejection always permits a next move and $r\le N$, so the run terminates.
 
-For computational complexity, store each echelon row as an intercept, a dense coefficient vector, and a pivot. On a revision, sweep the existing rows to reduce the new equation, then sweep the pivots to repair the guide. With one-hot variable addresses, each sweep takes $O(N^2)$ bit operations. Selecting and applying a batch also fits within $O(N^2)$ operations. At most $O(N^2)$ moves therefore take $O(N^4)$ internal bit operations in total. The retained rows, both assignment vectors, and the temporary space of a round occupy $O(N^2)$ bits. The verifier's own computation is external to the solver.
+For computational complexity, store each echelon row as an intercept, a dense coefficient vector, and a pivot. On a guide update, sweep the existing rows to reduce the new equation, then sweep the pivots to repair the guide. With one-hot variable addresses, each sweep takes $O(N^2)$ bit operations. Selecting and applying a batch also fits within $O(N^2)$ operations. At most $O(N^2)$ moves therefore take $O(N^4)$ internal bit operations in total. The retained rows, both assignment vectors, and the temporary space of a round occupy $O(N^2)$ bits. The verifier's own computation is external to the solver.
 \end{proof}
 
 \section{Why Quadratic Movement Can Be Unavoidable}\label{sec:lower}
@@ -181,7 +197,7 @@ For the binary simplex code of dimension $k$, every pair of distinct codewords h
 To obtain $\Omega(N + N^2/B)$ with width-$3$ odd-parity clauses and bounded variable occurrence, we instantiate $\mathcal{C}$ with a constant-rate, linear-distance LDPC code \cite{gallager1962}.
 
 \begin{lemma}[Existence of Sparse Linear-Distance Codes]\label{lem:ldpc}
-There exists an absolute constant $\delta > 0$ such that for all sufficiently large even $b$, there is a binary linear code on $b$ bits defined by $m = b/2$ parity checks with six sockets per check and three sockets per variable, dimension $k \ge b/2$, and minimum distance $d \ge \delta b$. After cancellation, each row has even weight at most six and each column has weight at most three.
+For every $m \ge 1$, writing $b=2m$, there is a binary linear code on $b$ bits defined by $m$ parity checks with six sockets per check and three sockets per variable, dimension $k \ge b/2$, and minimum distance $d \ge 2\lfloor m/26244\rfloor + 2$. In particular one may take $\delta = 1/26244$. After cancellation, each row has even weight at most six and each column has weight at most three.
 \end{lemma}
 
 \begin{proof}
@@ -190,19 +206,19 @@ Put $b=2m$ and choose a uniform bijection between the $3b$ variable sockets and 
   \binom{2m}{2j}\binom{m}{3j}(3j/m)^{6j}
        \le (6561j/m)^j \le 4^{-j}.
 \]
-Since $\sum_{j\ge1}4^{-j}=1/3$, some pairing has no nonzero codeword of weight at most $2\lfloor m/26244\rfloor$. There are at most $m$ independent parity rows, so the dimension is at least $m$. Each row has six sockets and each column has three. Cancelling repeated entries modulo two gives the asserted weight bounds.
+Since $\sum_{j\ge1}4^{-j}=1/3$, some pairing has no nonzero codeword of weight at most $2\lfloor m/26244\rfloor$. Combined with even weight, the minimum distance is therefore at least $2\lfloor m/26244\rfloor + 2$. There are at most $m$ independent parity rows, so the dimension is at least $m$. Each row has six sockets and each column has three. Cancelling repeated entries modulo two gives the asserted weight bounds.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:lower}]
-Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. In each row let $a,b',c,d,e,f$ be the variables at the six sockets, allowing repetitions. Three fresh coordinates $u,v,w$ implement the even check through the four equations
+Take a code from Lemma~\ref{lem:ldpc} on $b$ variables. In each row let $y_1,y_2,y_3,y_4,y_5,y_6$ be the variables at the six sockets, allowing repetitions. Three fresh coordinates $u,v,w$ implement the even check through the four equations
 \[
-    a \xor b' \xor u = 0,\quad u \xor c \xor v = 0,\quad v \xor d \xor w = 0,\quad w \xor e \xor f = 0.
+    y_1 \xor y_2 \xor u = 0,\quad u \xor y_3 \xor v = 0,\quad v \xor y_4 \xor w = 0,\quad w \xor y_5 \xor y_6 = 0.
 \]
 Encode each ternary even-parity equation by the four ordinary width-$3$ CNF clauses forbidding the four odd-weight tuples. On any even-weight tuple, the number of true literals in each clause equals its Hamming distance from that forbidden odd tuple, which is always odd ($1$ or $3$).
 
-Each original codeword extends uniquely to the auxiliary variables, and the extended code has minimum distance at least $d \ge \delta b$. The extended code uses $n\le b+3b/2=5b/2$ coordinates. The formula has $O(n)$ clauses. Each original variable occurs at most $13$ times (including its unit pin), and each auxiliary variable occurs at most $8$ times. Unit pins have $1$ (odd) true literal at the secret codeword.
+Each original codeword extends uniquely to the auxiliary variables, and the extended code has minimum distance at least $d \ge 2\lfloor m/26244\rfloor + 2$. The extended code uses $n\le b+3b/2=5b/2$ coordinates. The formula has $O(n)$ clauses. Each original variable occurs at most $13$ times (including its unit pin), and each auxiliary variable occurs at most $8$ times. Unit pins have $1$ (odd) true literal at the secret codeword.
 
-For a prescribed sufficiently large $N$, choose $b=2\lfloor N/5\rfloor$, so $n\le 5b/2\le N$. Add $N-n$ coordinates fixed to zero by public unit clauses and check those clauses before the secret pins. Appending the same zero coordinates to every codeword preserves dimension and minimum distance. Since $b=\Theta(N)$, both $k$ and $d$ are $\Omega(N)$. Applying Lemma~\ref{lem:charge} yields expected cost $\Omega(k \lceil d/B \rceil) = \Omega(N + N^2/B)$.
+For a prescribed $N \ge 5$, choose $b=2\lfloor N/5\rfloor$, so $n\le 5b/2\le N$. Add $N-n$ coordinates fixed to zero by public unit clauses and check those clauses before the secret pins. Appending the same zero coordinates to every codeword preserves dimension and minimum distance. Since $b=\Theta(N)$, both $k$ and $d$ are $\Omega(N)$. Applying Lemma~\ref{lem:charge} yields expected cost $\Omega(k \lceil d/B \rceil) = \Omega(N + N^2/B)$.
 \end{proof}
 
 \section{Exponential Separation from Memoryless Policies}\label{sec:sep}
@@ -211,7 +227,7 @@ We now prove Theorem~\ref{thm:sep}, first on a clean $\Theta(N^3)$-clause family
 
 \subsection{Dense Family and Equivariance}
 
-The dense construction and its transition law are the width-three specialization of Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}, who credit this case to Papadimitriou. We compare two search rules under the same observations on this family. Consider the formula $\Phi_{\mathrm{dense}}$ on $N$ variables consisting of:
+The dense construction and its transition law are the width-three specialization of Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}, who credit this case to Papadimitriou \cite{papadimitriou1991}. We compare two search rules under the same observations on this family. Consider the formula $\Phi_{\mathrm{dense}}$ on $N$ variables consisting of:
 \begin{itemize}
     \item unit clauses $(x_i)$ for every $i \in \{1,\dots,N\}$, and
     \item ternary clauses $(x_i \lor \neg x_j \lor \neg x_k)$ for every $i$ and every unordered pair $\{j,k\}$ not containing $i$.
@@ -220,9 +236,9 @@ The unique satisfying assignment is $1^N$, which makes exactly one literal true 
 
 Let $j \in \{1,\dots,N-1\}$ be the number of correct bits. There are $N-j$ violated unit clauses and $(N-j)\binom{j}{2}$ violated triples. A unit flip always advances $j$ to $j+1$; a uniformly random flip in a violated triple advances $j$ with probability $1/3$ and decreases $j$ with probability $2/3$. Setting $c_j = \binom{j}{2}$, the probability of advancing is
 \[
-    p_j = \frac{1 + c_j/3}{1 + c_j}, \qquad q_j = 1 - p_j,
+    p_j = \frac{1 + c_j/3}{1 + c_j}, \qquad q_j = 1 - p_j.
 \]
-with reflection upward at $j=1$. Writing $E_j$ for the expected remaining flips from state $j$ and $\Delta_j = E_j - E_{j+1}$, first-step conditioning gives $\Delta_1 = 1$ and $\Delta_j = 1/p_j + (q_j/p_j)\Delta_{j-1}$. Since $1/p_j \le 3$ and $q_j/p_j \le 2$, we have $\Delta_j \le 2^{j+1}-3$. For $j\ge7$ we have $2^j j\le896\Delta_j(j-6)$. At $j=7$ this follows from $\Delta_7\ge1$. For the induction step use
+At $j=1$ there are no violated triples, so $p_1 = 1$. Writing $E_j$ for the expected remaining flips from state $j$ and $\Delta_j = E_j - E_{j+1}$, first-step conditioning gives $\Delta_1 = 1$ and $\Delta_j = 1/p_j + (q_j/p_j)\Delta_{j-1}$. Since $1/p_j \le 3$ and $q_j/p_j \le 2$, we have $\Delta_j \le 2^{j+1}-3$. For $j\ge7$ we have $2^j j\le896\Delta_j(j-6)$. At $j=7$ this follows from $\Delta_7\ge1$. For the induction step use
 \[
  \Delta_{j+1}\ge\frac{2c_{j+1}}{3+c_{j+1}}\Delta_j,\qquad
  (j+1)(3+c_{j+1})(j-6)\le j\,c_{j+1}(j-5).
@@ -239,6 +255,8 @@ For any two distinct variables $u, v$ occurring in $C$, apply the coordinate tra
 
 For an equivariant learner, choose one uniform random permutation of the coordinates and one independent uniform complement mask at initialization. Express each report in these private coordinates and sort its literals before applying the deterministic learner. Translate its moves back to the public coordinates. Any external signed renaming permutes the equally likely private frames bijectively. Paired frames give identical internal states and correspondingly renamed moves on every history. Every frame obeys the same $N(N+1)/2$ bound.
 
+The learner uses the odd-parity promise to maintain affine equations. The memoryless walk uses only the latest violated clause and does not use the promise. The comparison therefore illustrates the value of history under a shared reporter; it is not a WalkSAT speedup on general SAT.
+
 \subsection{Sparse Bounded-Occurrence Strengthening}
 
 We choose a sparse subfamily of the dense triples by counting collections of permutations. This bounds the number of occurrences of every variable and supplies the drift estimate at every assignment in a middle band.
@@ -246,104 +264,178 @@ We choose a sparse subfamily of the dense triples by counting collections of per
 \begin{proof}[Proof of the sparse bound in Theorem~\ref{thm:sep}]
 Fix $0<\varepsilon<1$, put $t=2-\varepsilon$ and $\rho=2-\varepsilon/2$, and choose an integer $L>3\rho/(2-\rho)$. Since $t/\rho<1$, there is an integer $A\ge4$ with $t^A\le\rho^{A-2}$. Set
 \[
- K=2A(2L+3),\qquad r=\lceil N/K\rceil,\qquad a=(2L+3)r,\qquad b=N-a.
+ K=2A(2L+3),\qquad \ell=\lceil N/K\rceil,\qquad a=(2L+3)\ell,\qquad \beta=N-a.
 \]
-For $N\ge K$, the inequality $Kr\le N+K-1$ gives $Aa\le N$. Hence $4a\le N$ and $t^N\le\rho^{b-a}$, by writing $N=Aa+(N-Aa)$.
+For $N\ge K$, the inequality $K\ell\le N+K-1$ gives $Aa\le N$. Hence $4a\le N$ and $t^N\le\rho^{\beta-a}$, by writing $N=Aa+(N-Aa)$.
 
-Choose an integer $s$ with $(1-1/K)^s<1/8$ and draw $D=Ks$ independent uniform permutations of the $N$ variables. Use the directed edges $i\to\pi(i)$ from all $D$ permutations. For given $r$-sets $X,Y$, one permutation sends no element of $X$ into $Y$ with probability at most $(1-r/N)^r\le(1-1/K)^r$. Since $rK\ge N$, the probability that all $D$ miss is at most $8^{-N}$. There are at most $4^N$ ordered pairs of sets. Thus some choice gives an edge from $X$ to $Y$ for every such pair.
+Choose an integer $s$ with $(1-1/K)^s<1/8$ and draw $D=Ks$ independent uniform permutations of the $N$ variables. Use the directed edges $i\to\pi(i)$ from all $D$ permutations. The neighbors of a vertex are its out-neighbors under these edges; self-loops are possible. For given $\ell$-sets $X,Y$, one permutation sends no element of $X$ into $Y$ with probability at most $(1-\ell/N)^\ell\le(1-1/K)^\ell$. Since $\ell K\ge N$, the probability that all $D$ miss is at most $8^{-N}$. There are at most $4^N$ ordered pairs of sets. Thus some choice gives an edge from $X$ to $Y$ for every such pair.
 
 Keep the $N$ unit pins. For each owner $i$ include $(x_i\lor\neg x_j\lor\neg x_k)$ for each unordered pair of distinct out-neighbors $j,k$ different from $i$. There are at most $(1+2^D)N$ clauses. A variable can occur in triples owned by itself or by one of its at most $D$ predecessors, so its total occurrence count is at most $1+3(D+1)2^D$.
 
-Let $S$ be the set of true variables and suppose $a<j=|S|<b$. Fewer than $r$ owners have fewer than $2L+2$ distinct neighbors in $S$. Otherwise the neighbors of $r$ such owners would leave an untouched $r$-subset of $S$, since $|S|\ge(2L+3)r$. Among the $U=N-j\ge2r$ false owners, at least $U/2$ therefore have at least $2L+2$ true neighbors. Each contributes at least $2L$ violated triples. Writing $T$ for their total, we obtain $T\ge LU$. Under the uniform-clause walk the down/up probability ratio is $2T/(3U+T)\ge\rho$ at every assignment in this band.
+Let $S$ be the set of true variables and suppose $a<j=|S|<\beta$. Fewer than $\ell$ false owners have fewer than $2L+2$ distinct out-neighbors in $S$. Otherwise the out-neighbors of $\ell$ such owners would leave an untouched $\ell$-subset of $S$, since $|S|\ge(2L+3)\ell$. Among the $U=N-j\ge 2\ell$ false owners, at least $U/2$ therefore have at least $2L+2$ true out-neighbors. Each contributes at least $2L$ violated triples. Writing $T$ for their total, we obtain $T\ge LU$. Under the uniform-clause walk the down/up probability ratio is $2T/(3U+T)\ge\rho$ at every assignment in this band.
 
-For the hitting-time estimate, write $z(j)=\max(0,\min(j,b)-a)$ and
+For the hitting-time estimate, write $z(j)=\max(0,\min(j,\beta)-a)$ and
 \[
- V(j)=\frac{\rho^{b-a}-\rho^{z(j)}}{\rho-1}.
+ V(j)=\frac{\rho^{\beta-a}-\rho^{z(j)}}{\rho-1}.
 \]
-Inside the band an upward move decreases $V$ by $\rho^{j-a}$ and a downward move increases it by $\rho^{j-1-a}$. The ratio bound gives nonnegative expected change there. At or below $a$ one move can lose at most one unit, and at or above $b$ the potential is zero. Thus $V(j)\le1+\E[V(j_{\rm next})\mid x]$ at every unsolved assignment $x$ of level $j$. This bound conditions on the whole assignment.
+Inside the band an upward move decreases $V$ by $\rho^{j-a}$ and a downward move increases it by $\rho^{j-1-a}$. The ratio bound gives nonnegative expected change there. At or below $a$ one move can lose at most one unit, and at or above $\beta$ the potential is zero. Thus $V(j)\le1+\E[V(j_{\rm next})\mid x]$ at every unsolved assignment $x$ of level $j$. This bound conditions on the whole assignment.
 
 Let $H_h(x)$ be the expected number of moves up to success or the horizon $h$, whichever comes first. Choose $M>\max(1,\max_j V(j))$. Induction on $h$ in the one-step recurrence gives
 \[
  H_h(x)\ge[1-(1-1/M)^h]V(j).
 \]
-Indeed, if the current coefficient is $c$, then $1+c\,\E V(j_{\rm next})\ge cV(j)+1-c\ge[c+(1-c)/M]V(j)$. At success both sides vanish. For large $h$ the coefficient exceeds $1/2$. For $j<b$, we have $V(j)\ge\rho^{b-a-1}\ge\rho^{b-a}/2$, so the mean hitting time is at least $t^N/4$. This covers the specified start with one true bit. Under uniform initialization $\Prb(j\le N/2)\ge1/2$ by complementation, and $N/2<b$. Averaging gives the lower bound $t^N/8$.
+Indeed, if the current coefficient is $c$, then $1+c\,\E V(j_{\rm next})\ge cV(j)+1-c\ge[c+(1-c)/M]V(j)$. At success both sides vanish. For large $h$ the coefficient exceeds $1/2$. For $j<\beta$, we have $V(j)\ge\rho^{\beta-a-1}\ge\rho^{\beta-a}/2$, so the mean hitting time is at least $t^N/4$. This covers the specified start with one true bit. Under uniform initialization $\Prb(j\le N/2)\ge1/2$ by complementation, and $N/2<\beta$. Averaging gives the lower bound $t^N/8$.
 \end{proof}
 
 \section{Formal Verification, Empirical Checks, and Related Work}\label{sec:verif}
 
 \paragraph{Machine-checked results.}
-Lean~4.36.0 and the matching Mathlib release verify the three main results against the signed-clause oracle model. The declarations in \texttt{SatWalk/Main.lean} have the following scopes.
+Lean~4.36.0 and the matching Mathlib release verify the three main results against the signed-clause oracle model. The declarations collected in the Main module of the companion Lean development have the following scopes.
 \begin{itemize}
 \item \texttt{theorem\_upper\_bound} bounds every legal history by its learned rank. Companion theorems prove that each rejection receives a legal move and that the executable solver returns a satisfying assignment within budget. The declaration \texttt{theorem\_bit\_complexity} bounds the work and space of a dense bit-operation implementation that produces the same moves.
 \item \texttt{theorem\_lower\_bound} combines finite socket counting, parity-to-CNF compilation, and the first-examination charge. For any almost-surely terminating solver with measurable cost, one fixed promised formula has the required expected cost over its random tape.
 \item \texttt{theorem\_memoryless\_separation} gives dense and bounded-occurrence families for every signed-equivariant memoryless policy, under both initializations. The learner's guarantee holds on every history of those same formulas. A companion theorem couples whole learner histories under signed renaming.
 \end{itemize}
-The audit script rebuilds the declarations, checks their axiom lists and exports their proof terms for kernel replay. The only axioms used are propositional extensionality, classical choice and quotient soundness. The public \href{https://github.com/r4v3n-art/sat-feedback-movement}{companion repository} contains the paper, proofs and reproduction commands.
+The audit script rebuilds the declarations, checks their axiom lists and exports their proof terms for kernel replay. The only axioms used are propositional extensionality, classical choice and quotient soundness. The public \href{https://github.com/r4v3n-art/sat-feedback-movement}{companion repository}, frozen at tag \texttt{v1.0-arxiv}, contains the paper, proofs and reproduction commands.
 
 \paragraph{Calibration.}
 Lean proves the binomial tail bound for every cutoff in Lemma~\ref{lem:charge}, the exact simplex optimum in Remark~\ref{rem:simplex} for every dimension and batch size, and the exact mean of the triple-first walk. The finite checks in \texttt{check\_feedback.py} enumerate small cube instances, count dense transitions, and exercise the $[7,3,4]$ simplex example from Remark~\ref{rem:simplex}.
 
 \paragraph{Related Work.}
-Bei, Chen and Zhang introduced the trial-and-error model for hidden constraints \cite{bei2012}. Ivanyos et al.\ studied several variants in which an oracle reveals information about one violated constraint \cite{ivanyos2018}. In those models a solver may propose a fresh assignment on each trial. In online parity learning, the classical linear-independence argument bounds the number of prediction mistakes by the dimension \cite{buhrman2010}. Gaussian elimination also gives algorithms for affine promise CSPs \cite{brakensiek2018}.
+Bei, Chen and Zhang introduced the trial-and-error model for hidden constraints \cite{bei2013}. Ivanyos et al.\ studied several variants in which an oracle reveals information about one violated constraint \cite{ivanyos2018}. In those models a solver may propose a fresh assignment on each trial.
 
-To our knowledge, Theorems~\ref{thm:upper} and~\ref{thm:lower} give the first tight bound on the number of moves across all batch sizes $1\le B\le N$ in the hidden-clause odd-parity model defined here. The upper bound charges each guide correction to the rank of the learned equations. The matching lower bound uses width-three, bounded-occurrence formulas on which each wrong first guess forces a trip to a distant codeword before the next secret bit can be tested. The resulting minimax cost is $\Theta(N+N^2/B)$ even when the solver may randomize.
+The mistake-bound model of online learning goes back to Littlestone \cite{littlestone1988}; Angluin studied learning from equivalence and membership queries, including counterexamples \cite{angluin1988}. Helmbold, Sloan and Warmuth gave a mistake bound for learning integer lattices \cite{helmbold1992}. In online parity learning, the classical linear-independence argument bounds the number of prediction mistakes by the dimension \cite{buhrman2010}. Gaussian elimination also gives algorithms for affine promise CSPs \cite{brakensiek2018}. Schaefer's dichotomy theorem classifies generalized SAT, including the polynomial-time affine (XOR-SAT) case used here and the NP-complete 1-in-3-SAT case \cite{schaefer1978}.
 
-The dense random-walk family and its exponential slowdown appear in Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}. Theorem~\ref{thm:sep} compares the memoryless walk and the parity learner under the same uniform-clause feedback. Related analyses cover slow walks on planted formulas \cite{alekhnovich2002}, acceleration using learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2023}. Gao, He and Jiang \cite{gao2026} also prove bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates in the number $m$ of clauses.
+What is new, beyond that online parity mistake bound of at most $N$, is the movement cost of acting on those mistakes under a batch limit $B$: an extra $\Theta(N^2/B)$ term, together with a matching lower bound on bounded-occurrence odd-parity formulas. We determine the minimax movement cost up to constant factors.
+
+Random-walk SAT algorithms include Papadimitriou's polynomial-time algorithm for $2$-SAT \cite{papadimitriou1991}, Sch\"oning's exponential local-search algorithm for $k$-SAT \cite{schoning1999}, and WalkSAT \cite{selman1994}. Analyses of WalkSAT on XOR-SAT appear in Semerjian and Monasson \cite{semerjian2003}, Barthel, Hartmann and Weigt \cite{barthel2003}, and Guidetti and Young \cite{guidetti2011}. The dense random-walk family and its exponential slowdown appear in Zhou, He and Nie \cite[Definition~2 and Proposition~2]{zhou2009}, following Papadimitriou \cite{papadimitriou1991}. Theorem~\ref{thm:sep} compares the memoryless walk and the parity learner under the same uniform-clause feedback; what is new is a bounded-occurrence family satisfying the odd-parity promise with base approaching $2$, under a shared reporter. Related analyses cover slow walks on planted formulas \cite{alekhnovich2007}, acceleration using learned structure \cite{wei2002}, and learned stochastic SAT search \cite{kramer2026}. Gao, He and Jiang \cite{gao2026} also prove bounded-occurrence slowdowns for WalkSAT, including a degree-three family with $2^{\Theta(\sqrt{m})}$ expected updates and a $2^{\Omega(m)}$ WalkSAT lower bound in the number $m$ of clauses.
+
+The sparse linear-distance codes in the lower bound continue Gallager's LDPC construction \cite{gallager1962}, expander codes \cite{sipser1996}, and the modern analysis of sparse graph codes \cite{richardson2008}. The movement cost of chasing a changing guide is related to convex body chasing \cite{friedman1993} and nested convex body chasing \cite{bansal2018}.
 
 \paragraph{Open Problems.}
 Can the bounded-occurrence family in Theorem~\ref{thm:sep} be constructed deterministically in time polynomial in $N$ for each fixed $\varepsilon$? Our existence proof chooses permutation layers by counting. Can sparse row representations improve the verified quartic bit-work bound while preserving the rank-sensitive movement guarantee? Finally, what movement bounds hold for hidden Horn or 2-SAT formulas, or when a small fraction of clauses violate the odd-parity promise?
 
 \begin{thebibliography}{99}
 
-\bibitem{alekhnovich2002}
+\bibitem{alekhnovich2007}
 M.~Alekhnovich and E.~Ben-Sasson.
-\newblock Analysis of the random walk algorithm on random 3-CNFs.
-\newblock \href{https://www.cs.cornell.edu/selman/docs/eli-02.pdf}{Author manuscript}, April 2002.
+\newblock Linear upper bounds for random walk on small density random 3-CNFs.
+\newblock \href{https://doi.org/10.1137/S0097539704440107}{\emph{SIAM J.\ Comput.}}, 36(5):1248--1263, 2007.
 
-\bibitem{bei2012}
+\bibitem{angluin1988}
+D.~Angluin.
+\newblock Queries and concept learning.
+\newblock \href{https://doi.org/10.1007/BF00116828}{\emph{Mach.\ Learn.}}, 2(4):319--342, 1988.
+
+\bibitem{bansal2018}
+N.~Bansal, M.~B\"ohm, M.~Eli\'{a}\v{s}, G.~Koumoutsos, and S.~W.~Umboh.
+\newblock Nested convex bodies are chaseable.
+\newblock \href{https://doi.org/10.1137/1.9781611975031.81}{Proc.\ SODA}, pages 1253--1260, 2018.
+
+\bibitem{barthel2003}
+W.~Barthel, A.~K.~Hartmann, and M.~Weigt.
+\newblock Solving satisfiability problems by fluctuations: The dynamics of stochastic local search algorithms.
+\newblock \href{https://doi.org/10.1103/PhysRevE.67.066104}{\emph{Phys.\ Rev.\ E}}, 67(6):066104, 2003.
+
+\bibitem{bei2013}
 X.~Bei, N.~Chen, and S.~Zhang.
 \newblock On the complexity of trial and error.
-\newblock \href{https://arxiv.org/abs/1205.1183}{arXiv:1205.1183}, 2012.
+\newblock \href{https://doi.org/10.1145/2488608.2488613}{Proc.\ STOC}, pages 31--40, 2013.
 
 \bibitem{brakensiek2018}
 J.~Brakensiek and V.~Guruswami.
 \newblock Promise constraint satisfaction: structure theory and a symmetric Boolean dichotomy.
-\newblock \href{https://doi.org/10.1137/1.9781611975031.117}{Proc.\ SODA}, 2018.
+\newblock \href{https://doi.org/10.1137/1.9781611975031.117}{Proc.\ SODA}, pages 1782--1801, 2018.
 
 \bibitem{buhrman2010}
-H.~Buhrman, D.~García-Soriano, and A.~Matsliah.
-\newblock \href{https://doi.org/10.1016/j.ipl.2010.10.009}{Learning parities in the mistake-bound model}.
-\newblock \emph{Information Processing Letters}, 111(1):16--21, 2010.
+H.~Buhrman, D.~Garc\'{i}a-Soriano, and A.~Matsliah.
+\newblock Learning parities in the mistake-bound model.
+\newblock \href{https://doi.org/10.1016/j.ipl.2010.10.009}{\emph{Inf.\ Process.\ Lett.}}, 111(1):16--21, 2010.
+
+\bibitem{friedman1993}
+J.~Friedman and N.~Linial.
+\newblock On convex body chasing.
+\newblock \href{https://doi.org/10.1007/BF02189324}{\emph{Discrete Comput.\ Geom.}}, 9(3):293--321, 1993.
 
 \bibitem{gallager1962}
 R.~G.~Gallager.
 \newblock Low-density parity-check codes.
-\newblock \emph{IRE Transactions on Information Theory}, 8(1):21--28, 1962.
-
-\bibitem{ivanyos2018}
-G.~Ivanyos, R.~Kulkarni, Y.~Qiao, M.~Santha, and A.~Sundaram.
-\newblock \href{https://arxiv.org/abs/1406.5336}{On the complexity of trial and error for constraint satisfaction problems}.
-\newblock \emph{Journal of Computer and System Sciences}, 92:48--64, 2018.
-
-\bibitem{kramer2023}
-M.~J. Kramer, P.~Boes, and J.~Eisert.
-\newblock Using deep learning to construct stochastic local search SAT solvers with performance bounds.
-\newblock \href{https://arxiv.org/abs/2309.11452}{arXiv:2309.11452}, 2023.
-
-\bibitem{wei2002}
-W.~Wei and B.~Selman.
-\newblock \href{https://www.cs.cornell.edu/selman/papers/pdf/02.cp.randomwalk.pdf}{Accelerating random walks}.
-\newblock \emph{Proc.\ CP}, 2002.
-
-\bibitem{zhou2009}
-Y.~Zhou, J.~He, and Q.~Nie.
-\newblock A comparative runtime analysis of heuristic algorithms for satisfiability problems.
-\newblock \href{https://doi.org/10.1016/j.artint.2008.11.002}{Artificial Intelligence}, 173, 2009.
+\newblock \href{https://doi.org/10.1109/TIT.1962.1057683}{\emph{IRE Trans.\ Inf.\ Theory}}, 8(1):21--28, 1962.
 
 \bibitem{gao2026}
 M.~Gao, K.~He, and T.~Jiang.
 \newblock Tight variable-occurrence bounds and exponential separations for Moser--Tardos and WalkSAT on 3-CNF.
 \newblock \href{https://arxiv.org/abs/2611.09335}{arXiv:2611.09335}, 2026.
+
+\bibitem{guidetti2011}
+M.~Guidetti and A.~P.~Young.
+\newblock Complexity of several constraint-satisfaction problems using the heuristic classical algorithm WalkSAT.
+\newblock \href{https://doi.org/10.1103/PhysRevE.84.011102}{\emph{Phys.\ Rev.\ E}}, 84(1):011102, 2011.
+
+\bibitem{helmbold1992}
+D.~Helmbold, R.~Sloan, and M.~K.~Warmuth.
+\newblock Learning integer lattices.
+\newblock \href{https://doi.org/10.1137/0221019}{\emph{SIAM J.\ Comput.}}, 21(2):240--266, 1992.
+
+\bibitem{ivanyos2018}
+G.~Ivanyos, R.~Kulkarni, Y.~Qiao, M.~Santha, and A.~Sundaram.
+\newblock On the complexity of trial and error for constraint satisfaction problems.
+\newblock \href{https://doi.org/10.1016/j.jcss.2017.07.005}{\emph{J.\ Comput.\ System Sci.}}, 92:48--64, 2018.
+
+\bibitem{kramer2026}
+M.~J.~Kramer, P.~Boes, and J.~Eisert.
+\newblock Using deep learning to construct stochastic local search SAT solvers with performance bounds.
+\newblock \href{https://doi.org/10.1088/2632-2153/ae5b23}{\emph{Mach.\ Learn.: Sci.\ Technol.}}, 7:025057, 2026.
+
+\bibitem{littlestone1988}
+N.~Littlestone.
+\newblock Learning quickly when irrelevant attributes abound: a new linear-threshold algorithm.
+\newblock \href{https://doi.org/10.1007/BF00116827}{\emph{Mach.\ Learn.}}, 2(4):285--318, 1988.
+
+\bibitem{papadimitriou1991}
+C.~H.~Papadimitriou.
+\newblock On selecting a satisfying truth assignment (extended abstract).
+\newblock \href{https://doi.org/10.1109/SFCS.1991.185365}{Proc.\ FOCS}, pages 163--169, 1991.
+
+\bibitem{richardson2008}
+T.~Richardson and R.~Urbanke.
+\newblock \emph{Modern Coding Theory}.
+\newblock \href{https://doi.org/10.1017/CBO9780511791338}{Cambridge University Press}, 2008.
+
+\bibitem{schaefer1978}
+T.~J.~Schaefer.
+\newblock The complexity of satisfiability problems.
+\newblock \href{https://doi.org/10.1145/800133.804350}{Proc.\ STOC}, pages 216--226, 1978.
+
+\bibitem{schoning1999}
+U.~Sch\"oning.
+\newblock A probabilistic algorithm for $k$-SAT and constraint satisfaction problems.
+\newblock \href{https://doi.org/10.1109/SFFCS.1999.814612}{Proc.\ FOCS}, pages 410--414, 1999.
+
+\bibitem{selman1994}
+B.~Selman, H.~A.~Kautz, and B.~Cohen.
+\newblock Noise strategies for improving local search.
+\newblock Proc.\ AAAI, pages 337--343, 1994.
+
+\bibitem{semerjian2003}
+G.~Semerjian and R.~Monasson.
+\newblock Relaxation and metastability in a local search procedure for the random satisfiability problem.
+\newblock \href{https://doi.org/10.1103/PhysRevE.67.066103}{\emph{Phys.\ Rev.\ E}}, 67(6):066103, 2003.
+
+\bibitem{sipser1996}
+M.~Sipser and D.~A.~Spielman.
+\newblock Expander codes.
+\newblock \href{https://doi.org/10.1109/18.556667}{\emph{IEEE Trans.\ Inf.\ Theory}}, 42(6):1710--1722, 1996.
+
+\bibitem{wei2002}
+W.~Wei and B.~Selman.
+\newblock Accelerating random walks.
+\newblock \href{https://doi.org/10.1007/3-540-46135-3_15}{Proc.\ CP}, pages 216--232, 2002.
+
+\bibitem{zhou2009}
+Y.~Zhou, J.~He, and Q.~Nie.
+\newblock A comparative runtime analysis of heuristic algorithms for satisfiability problems.
+\newblock \href{https://doi.org/10.1016/j.artint.2008.11.002}{\emph{Artif.\ Intell.}}, 173(2):240--257, 2009.
 
 \end{thebibliography}
 

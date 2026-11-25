@@ -6,6 +6,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     env:
       MATHLIB_NO_CACHE_ON_UPDATE: "1"
     steps:
@@ -20,7 +21,29 @@ jobs:
         run: |
           modules=$(sed -n 's/^import \(Mathlib\.[A-Za-z0-9_.]*\)$/\1/p' SatWalk/*.lean | sort -u)
           lake exe cache get $modules
-      - name: Check Lean proofs and axiom lists
-        run: ./scripts/verify.sh --axioms-only
+      - name: Check Lean proofs, axiom lists, and kernel replay
+        run: ./scripts/verify.sh
       - name: Run the finite calibration examples
         run: python3 scripts/check_feedback.py
+
+  paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended texlive-science
+      - name: Compile the paper with pdflatex
+        working-directory: paper
+        run: |
+          set -euo pipefail
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          if grep -E 'LaTeX Warning:|Package [^ ]+ Warning:|There were undefined references|Citation .* undefined' main.log; then
+            echo "pdflatex produced warnings or undefined references"
+            exit 1
+          fi

@@ -6,7 +6,10 @@ authors:
   - family-names: Bordeleau
     given-names: C.J.
 repository-code: "https://github.com/r4v3n-art/sat-feedback-movement"
+url: "https://github.com/r4v3n-art/sat-feedback-movement/tree/v1.0-arxiv"
+version: "1.0-arxiv"
 license: Apache-2.0
+# Tag v1.0-arxiv and a Zenodo DOI are created after this preprint branch merges; do not mint them here.
 preferred-citation:
   type: unpublished
   title: "Learning from Violated Clauses in Hidden SAT: Tight Movement Bounds under an Odd-Parity Promise"
@@ -14,4 +17,4 @@ preferred-citation:
     - family-names: Bordeleau
       given-names: C.J.
   year: 2026
-  url: "https://github.com/r4v3n-art/sat-feedback-movement/blob/HEAD/paper/main.pdf"
+  url: "https://github.com/r4v3n-art/sat-feedback-movement/blob/v1.0-arxiv/paper/main.pdf"
